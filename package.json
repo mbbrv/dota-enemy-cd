@@ -1,0 +1,40 @@
+{
+  "name": "dota-enemy-cd",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Manual Dota 2 enemy cooldown tracker with desktop global hotkeys.",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "check": "node --check app.js && node --check presets.js && node --check electron/main.cjs && node --check electron/preload.cjs",
+    "desktop": "electron .",
+    "start": "electron .",
+    "pack:win": "electron-builder --win portable",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "local.dota-enemy-cd",
+    "productName": "Dota Enemy CD",
+    "artifactName": "DotaEnemyCD-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "presets.js",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
