@@ -1,0 +1,9 @@
+node_modules
+dist
+.cache
+.git
+.github
+.agents
+electron
+scripts
+*.log

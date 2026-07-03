@@ -4,6 +4,8 @@ Manual cooldown tracker for Dota 2 enemies. Use it on a second monitor to track 
 
 **Disclaimer:** the app does not read or modify Dota 2 memory, code, packets, logs, screen pixels, or game state. All timers are started manually by the player.
 
+Web version: https://dota-enemy-cd.vercel.app
+
 ## English
 
 ### Download

@@ -25,7 +25,7 @@
 }
 
 body {
-  min-width: 980px;
+  min-width: 0;
   margin: 0;
   background:
     linear-gradient(180deg, rgba(24, 183, 160, 0.08), transparent 220px),
@@ -67,6 +67,7 @@ button {
   align-items: center;
   gap: 12px;
   min-width: 250px;
+  flex: 0 0 auto;
 }
 
 .brand-mark {
@@ -101,6 +102,8 @@ h1 {
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .segmented {
@@ -322,6 +325,8 @@ body[data-mode="match"] #importState {
 .app-layout {
   display: grid;
   gap: 16px;
+  max-width: 100vw;
+  overflow-x: clip;
   padding: 16px 20px 28px;
 }
 
@@ -511,7 +516,7 @@ body[data-mode="match"] #importState {
 
 .enemy-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
   gap: 12px;
   align-items: start;
 }
@@ -534,12 +539,32 @@ body[data-mode="match"] #importState {
 
 .hero-top {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) minmax(136px, 0.7fr) minmax(136px, 0.7fr) 34px 34px;
+  grid-template-columns: 46px minmax(0, 1fr) 34px 34px;
   gap: 8px;
   align-items: center;
   padding: 12px;
   border-bottom: 1px solid var(--line-soft);
   background: rgba(0, 0, 0, 0.16);
+}
+
+.hero-top .preset-select {
+  grid-column: 1 / 5;
+  grid-row: 2;
+}
+
+.hero-top .addon-select {
+  grid-column: 1 / 5;
+  grid-row: 3;
+}
+
+.hero-top [data-action="addAbility"] {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.hero-top [data-action="deleteHero"] {
+  grid-column: 4;
+  grid-row: 1;
 }
 
 .hero-name {
@@ -563,6 +588,7 @@ body[data-mode="match"] #importState {
   color: var(--text);
   color-scheme: dark;
   padding: 0 8px;
+  width: 100%;
 }
 
 .preset-select option,
@@ -929,20 +955,12 @@ body[data-mode="match"] .ability-row {
 }
 
 @media (max-width: 1380px) {
-  body {
-    min-width: 760px;
-  }
-
   .enemy-grid {
-    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   }
 }
 
 @media (max-width: 980px) {
-  body {
-    min-width: 0;
-  }
-
   .topbar {
     position: static;
     align-items: flex-start;
