@@ -51,15 +51,6 @@ Example copied message:
 Black Hole cd 1:42 ready 12:34
 ```
 
-### Notes
-
-- Roshan/Aegis and Blink Dagger are intentionally not included.
-- Cooldowns are editable because Dota patches can change values.
-- Hero and spell images load when an internet connection is available. If an image is missing, the app shows a short fallback label.
-- In the desktop app, `Voice Pack` plays local audio files such as `black-hole-ready.mp3` from the app's voice-pack folder. Use the folder button near the alert selector to open it.
-- `Voice` uses a non-default English system/browser voice when one is available. If only the default voice is available, the app falls back to `Chime`.
-- Keep the app open while playing if you want sound alerts and global hotkeys.
-
 ## Русский
 
 **Дисклеймер:** приложение не читает и не меняет память, код, пакеты, логи, пиксели экрана или состояние игры Dota 2. Все таймеры запускает игрок вручную.
@@ -108,12 +99,3 @@ Black Hole cd 1:42 ready 12:34
 ```text
 Black Hole cd 1:42 ready 12:34
 ```
-
-### Заметки
-
-- Roshan/Aegis и Blink Dagger намеренно не добавлены.
-- Кулдауны можно редактировать, потому что патчи Dota могут менять значения.
-- Картинки героев и скиллов загружаются при наличии интернета. Если картинка недоступна, приложение покажет короткую текстовую заглушку.
-- В desktop-приложении `Voice Pack` проигрывает локальные аудиофайлы вроде `black-hole-ready.mp3` из папки voice-pack приложения. Открыть ее можно кнопкой с папкой рядом с выбором сигнала.
-- `Voice` использует не-default английский системный/браузерный голос, если он доступен. Если доступен только default-голос, приложение откатится на `Chime`.
-- Держи приложение открытым во время игры, если нужны звуковые сигналы и глобальные хоткеи.
