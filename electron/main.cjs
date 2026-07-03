@@ -21,6 +21,7 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      additionalArguments: [`--dota-cd-locale=${app.getLocale()}`],
       preload: path.join(__dirname, "preload.cjs"),
     },
   });

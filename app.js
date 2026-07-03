@@ -65,6 +65,162 @@ const voicePackAliases = new Map([
   ["Refresher Orb", ["refresher"]],
   ["Outworld Destroyer", ["od"]],
 ]);
+const locale = getAppLocale();
+const language = locale.toLowerCase().startsWith("ru") ? "ru" : "en";
+const messages = {
+  en: {
+    activeCooldowns: "Active cooldowns",
+    activeCountText: "{count} active",
+    addAbility: "Add spell",
+    addHero: "Hero",
+    addonExists: "{name} is already added",
+    addonPlaceholder: "+ item/resource...",
+    all: "All",
+    appSubtitle: "Manual timer board",
+    boardLabel: "Enemy timers",
+    chatTextPrompt: "Chat text:",
+    copied: "Copied: {text}",
+    cooldownSeconds: "Cooldown in seconds",
+    copyActive: "Copy active cooldowns",
+    copyChat: "Copy chat text",
+    delete: "Delete",
+    deleteHero: "Delete hero",
+    emptyFilter: "No spells in this filter",
+    enemy: "Enemy",
+    exportSettings: "Copy settings",
+    favorite: "Favorite",
+    filterLabel: "Spell filter",
+    heroPreset: "Hero preset...",
+    hotkey: "Key",
+    hotkeyConflict: "Hotkey conflict {key}: {names}",
+    importSettings: "Import settings",
+    importSettingsPrompt: "Paste settings JSON:",
+    importSettingsError: "Could not read settings.",
+    match: "Match",
+    matchMode: "Match",
+    matchNotStarted: "match not started",
+    minCooldownTitle: "Minimum cooldown for CD >= filter",
+    minus5: "Minus 5 seconds",
+    modeLabel: "Mode",
+    nearest: "Next",
+    newAbility: "New spell",
+    noActiveCooldown: "no active cd",
+    noActiveCooldowns: "No active cooldowns",
+    noCooldown: "no cd",
+    noMatchTime: "no match time",
+    noVisibleTimer: "No visible timer for {key}",
+    none: "None",
+    openVoicePack: "Open voice pack folder",
+    openVoicePackCount: "Open voice pack folder ({count} files)",
+    ready: "Ready",
+    readyAt: "ready {time}",
+    readyTitle: "{label} ready",
+    resetMatch: "Reset match",
+    resetMatchConfirm: "Reset match and all active cooldowns?",
+    resetMatchTitle: "Stop match and clear all cooldowns",
+    resetTimers: "Reset active timers",
+    secondsShort: "sec",
+    setup: "Setup",
+    skill: "Skill",
+    skillPlaceholder: "Spell",
+    soundOff: "Sound off",
+    soundOn: "Sound on",
+    start: "Start",
+    startMatch: "Start match",
+    startMatchTitle: "Start match clock",
+    statusActive: "Active",
+    stop: "Stop",
+    toolbarLabel: "Control panel",
+    tracked: "Tracked",
+    ultimate: "Ultimate",
+    ultimates: "Ults",
+    volume: "Alert volume",
+    alertTitle: "Alert type",
+    alertLabel: "Alert",
+    testSound: "Test sound",
+    settingsPrompt: "Settings:",
+    voiceFallback: "Voice: no non-default English voice, playing Chime",
+    voicePackFolder: "Voice pack: {directory}",
+    voicePackMissing: "Voice Pack: no file for {label}, fallback",
+    voicePackReadError: "Could not read voice pack",
+  },
+  ru: {
+    activeCooldowns: "Активные кулдауны",
+    activeCountText: "{count} активно",
+    addAbility: "Добавить скилл",
+    addHero: "Герой",
+    addonExists: "{name} уже добавлен",
+    addonPlaceholder: "+ item/resource...",
+    all: "Все",
+    appSubtitle: "Ручная доска таймеров",
+    boardLabel: "Таймеры врагов",
+    chatTextPrompt: "Текст для чата:",
+    copied: "Скопировано: {text}",
+    cooldownSeconds: "Кулдаун в секундах",
+    copyActive: "Скопировать активные кулдауны",
+    copyChat: "Скопировать текст для чата",
+    delete: "Удалить",
+    deleteHero: "Удалить героя",
+    emptyFilter: "Нет скиллов в текущем фильтре",
+    enemy: "Враг",
+    exportSettings: "Скопировать настройки",
+    favorite: "Избранное",
+    filterLabel: "Фильтр скиллов",
+    heroPreset: "Пресет героя...",
+    hotkey: "Клавиша",
+    hotkeyConflict: "Конфликт хоткея {key}: {names}",
+    importSettings: "Импортировать настройки",
+    importSettingsPrompt: "Вставь JSON настроек:",
+    importSettingsError: "Не получилось прочитать настройки.",
+    match: "Матч",
+    matchMode: "Матч",
+    matchNotStarted: "матч не начат",
+    minCooldownTitle: "Минимальный кулдаун для фильтра CD >=",
+    minus5: "Минус 5 секунд",
+    modeLabel: "Режим",
+    nearest: "Ближайший",
+    newAbility: "Новый скилл",
+    noActiveCooldown: "нет активного кд",
+    noActiveCooldowns: "Нет активных кулдаунов",
+    noCooldown: "нет кд",
+    noMatchTime: "без времени матча",
+    noVisibleTimer: "Нет видимого таймера для {key}",
+    none: "Нет",
+    openVoicePack: "Открыть папку voice pack",
+    openVoicePackCount: "Открыть папку voice pack ({count} файлов)",
+    ready: "Готов",
+    readyAt: "готов {time}",
+    readyTitle: "{label} готов",
+    resetMatch: "Сброс матча",
+    resetMatchConfirm: "Сбросить матч и все активные кулдауны?",
+    resetMatchTitle: "Остановить матч и сбросить все кулдауны",
+    resetTimers: "Сбросить активные таймеры",
+    secondsShort: "сек",
+    setup: "Настройка",
+    skill: "Skill",
+    skillPlaceholder: "Скилл",
+    soundOff: "Звук выключен",
+    soundOn: "Звук включен",
+    start: "Запустить",
+    startMatch: "Начать матч",
+    startMatchTitle: "Запустить игровые часы",
+    statusActive: "Активно",
+    stop: "Остановить",
+    toolbarLabel: "Панель управления",
+    tracked: "Избранное",
+    ultimate: "Ультимейт",
+    ultimates: "Ульты",
+    volume: "Громкость сигнала",
+    alertTitle: "Тип сигнала",
+    alertLabel: "Сигнал",
+    testSound: "Проверить звук",
+    settingsPrompt: "Настройки:",
+    voiceFallback: "Voice: нет не-default English voice, играю Chime",
+    voicePackFolder: "Voice pack: {directory}",
+    voicePackMissing: "Voice Pack: нет файла для {label}, fallback",
+    voicePackReadError: "Не получилось прочитать voice pack",
+  },
+};
 const blockedPresetAbilities = new Set([
   "aegis",
   "aegis of the immortal",
@@ -75,6 +231,15 @@ const blockedPresetAbilities = new Set([
   "roshan",
   "satanic",
 ]);
+
+function getAppLocale() {
+  return desktopApi?.locale || navigator.languages?.[0] || navigator.language || "en-US";
+}
+
+function t(key, values = {}) {
+  const template = messages[language][key] || messages.en[key] || key;
+  return template.replace(/\{(\w+)\}/g, (_match, name) => String(values[name] ?? ""));
+}
 
 const presetBundle = window.DOTA_ENEMY_CD_PRESETS || { starterHeroNames: [], heroes: [] };
 const heroPresets = [...(presetBundle.heroes || [])].sort((a, b) => a.name.localeCompare(b.name));
@@ -142,7 +307,7 @@ function createAbility(data = {}) {
 
   return {
     id: data.id || uid(),
-    name: data.name || "Новый скилл",
+    name: data.name || t("newAbility"),
     cooldown: clampNumber(data.cooldown ?? 120, 1, 999),
     type: ["ult", "item"].includes(data.type) ? data.type : "skill",
     key: normalizeHotkey(data.key || ""),
@@ -158,7 +323,7 @@ function createAbility(data = {}) {
 function createHero(data = {}, index = 0) {
   return {
     id: data.id || uid(),
-    name: data.name || `Враг ${index + 1}`,
+    name: data.name || `${t("enemy")} ${index + 1}`,
     color: data.color || colors[index % colors.length],
     abilities: Array.isArray(data.abilities)
       ? data.abilities.filter((ability) => !isBlockedPresetAbility(ability.name)).map(createAbility)
@@ -250,6 +415,65 @@ function escapeHtml(value) {
 
 function icon(name) {
   return `<svg aria-hidden="true"><use href="#i-${name}"></use></svg>`;
+}
+
+function applyLocale() {
+  document.documentElement.lang = language;
+
+  const subtitle = document.querySelector(".brand p");
+  if (subtitle) subtitle.textContent = t("appSubtitle");
+
+  const toolbar = document.querySelector(".toolbar");
+  if (toolbar) toolbar.setAttribute("aria-label", t("toolbarLabel"));
+
+  const modeGroup = els.modeButtons[0]?.parentElement;
+  if (modeGroup) modeGroup.setAttribute("aria-label", t("modeLabel"));
+  els.modeButtons.forEach((button) => {
+    button.textContent = t(button.dataset.mode === "match" ? "matchMode" : "setup");
+  });
+
+  const filterGroup = els.filterButtons[0]?.parentElement;
+  if (filterGroup) filterGroup.setAttribute("aria-label", t("filterLabel"));
+  els.filterButtons.forEach((button) => {
+    if (button.dataset.filter === "all") button.textContent = t("all");
+    if (button.dataset.filter === "ults") button.textContent = t("ultimates");
+    if (button.dataset.filter === "tracked") button.textContent = t("tracked");
+  });
+
+  const minControl = els.minCooldown?.closest(".number-control");
+  if (minControl) {
+    minControl.title = t("minCooldownTitle");
+    const label = minControl.querySelector("span");
+    if (label) label.textContent = t("secondsShort");
+  }
+
+  const volumeControl = els.volume?.closest(".volume-control");
+  if (volumeControl) volumeControl.title = t("volume");
+
+  const alertControl = els.alertSound?.closest(".alert-control");
+  if (alertControl) {
+    alertControl.title = t("alertTitle");
+    const label = alertControl.querySelector("span");
+    if (label) label.textContent = t("alertLabel");
+  }
+
+  if (els.openVoicePack) els.openVoicePack.title = t("openVoicePack");
+  if (els.testSound) els.testSound.title = t("testSound");
+  if (els.resetTimers) els.resetTimers.title = t("resetTimers");
+  if (els.copyActive) els.copyActive.title = t("copyActive");
+  if (els.exportState) els.exportState.title = t("exportSettings");
+  if (els.importState) els.importState.title = t("importSettings");
+  if (els.addHero) els.addHero.innerHTML = `${icon("plus")}${t("addHero")}`;
+
+  const statusLabels = document.querySelectorAll(".status-strip .status-label");
+  [t("statusActive"), t("match"), t("ready"), t("nearest")].forEach((text, index) => {
+    if (statusLabels[index]) statusLabels[index].textContent = text;
+  });
+
+  const activePanelLabel = document.querySelector(".active-panel-head .status-label");
+  if (activePanelLabel) activePanelLabel.textContent = t("activeCooldowns");
+  if (els.activeSummary) els.activeSummary.textContent = t("none");
+  if (els.board) els.board.setAttribute("aria-label", t("boardLabel"));
 }
 
 function slugifyAssetName(value) {
@@ -366,7 +590,7 @@ function getMatchElapsedMs(now = Date.now()) {
 
 function getReadyMatchText(ability) {
   if (!ability.readyMatchAtMs) return "";
-  return `ready ${formatMatchTime(ability.readyMatchAtMs)}`;
+  return t("readyAt", { time: formatMatchTime(ability.readyMatchAtMs) });
 }
 
 function abilityTypeLabel(type) {
@@ -452,9 +676,9 @@ function hasHotkeyConflict(ability, conflicts) {
 
 function getHotkeyConflictTitle(ability, conflicts) {
   const entries = ability.key ? conflicts.get(ability.key) : null;
-  if (!entries) return "Клавиша";
+  if (!entries) return t("hotkey");
   const names = entries.map((entry) => `${entry.hero.name}: ${entry.ability.name}`).join(", ");
-  return `Конфликт хоткея ${ability.key}: ${names}`;
+  return t("hotkeyConflict", { key: ability.key, names });
 }
 
 function findAbilitiesByHotkey(key) {
@@ -475,13 +699,13 @@ function findAbilitiesByHotkey(key) {
 
 function showHotkeyConflict(key, matches) {
   const names = matches.map((match) => `${match.hero.name}: ${match.ability.name}`).join(", ");
-  showToast(`Конфликт хоткея ${key}: ${names}`);
+  showToast(t("hotkeyConflict", { key, names }));
 }
 
 function handleHotkeyCommand(action, key) {
   const matches = findAbilitiesByHotkey(key);
   if (!matches.length) {
-    showToast(`Нет видимого таймера для ${key}`);
+    showToast(t("noVisibleTimer", { key }));
     return;
   }
   if (matches.length > 1) {
@@ -517,10 +741,10 @@ function syncControls() {
   els.volume.value = Math.round(state.volume * 100);
   els.alertSound.value = state.alertSound;
   els.soundToggle.setAttribute("aria-pressed", String(state.soundEnabled));
-  els.soundToggle.title = state.soundEnabled ? "Звук включен" : "Звук выключен";
+  els.soundToggle.title = state.soundEnabled ? t("soundOn") : t("soundOff");
   els.soundToggle.innerHTML = icon(state.soundEnabled ? "bell" : "bell-off");
-  els.matchToggle.innerHTML = `${icon(state.matchStartedAt ? "reset" : "play")}${state.matchStartedAt ? "Сброс матча" : "Начать матч"}`;
-  els.matchToggle.title = state.matchStartedAt ? "Остановить матч и сбросить все кулдауны" : "Запустить игровые часы";
+  els.matchToggle.innerHTML = `${icon(state.matchStartedAt ? "reset" : "play")}${state.matchStartedAt ? t("resetMatch") : t("startMatch")}`;
+  els.matchToggle.title = state.matchStartedAt ? t("resetMatchTitle") : t("startMatchTitle");
 
   els.filterButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.filter === state.filter);
@@ -541,7 +765,7 @@ function renderHero(hero, conflicts) {
   const isMatchMode = state.mode === "match";
   const rows = visibleAbilities.length
     ? visibleAbilities.map((ability) => renderAbility(hero, ability, conflicts)).join("")
-    : `<div class="empty-state">Нет скиллов в текущем фильтре</div>`;
+    : `<div class="empty-state">${t("emptyFilter")}</div>`;
   const activeCount = hero.abilities.filter((ability) => isActive(ability)).length;
 
   return `
@@ -552,26 +776,26 @@ function renderHero(hero, conflicts) {
             ? `
               <div class="hero-title hero-title-visual" title="${escapeHtml(hero.name)}">
                 ${renderHeroImage(hero)}
-                <span>${activeCount ? `активно ${activeCount}` : "нет кд"}</span>
+                <span>${activeCount ? t("activeCountText", { count: activeCount }) : t("noCooldown")}</span>
               </div>
             `
             : `
               ${renderHeroImage(hero, "hero-portrait hero-portrait-setup")}
-              <input class="hero-name" data-field="heroName" data-hero-id="${hero.id}" value="${escapeHtml(hero.name)}" placeholder="Враг" />
+              <input class="hero-name" data-field="heroName" data-hero-id="${hero.id}" value="${escapeHtml(hero.name)}" placeholder="${escapeHtml(t("enemy"))}" />
               <select class="preset-select" data-field="preset" data-hero-id="${hero.id}">
-                <option value="">Пресет героя...</option>
+                <option value="">${t("heroPreset")}</option>
                 ${heroPresets
                   .map((preset) => `<option value="${escapeHtml(preset.name)}" ${preset.name === hero.name ? "selected" : ""}>${escapeHtml(preset.name)}</option>`)
                   .join("")}
               </select>
               <select class="addon-select" data-field="addon" data-hero-id="${hero.id}">
-                <option value="">+ item/resource...</option>
+                <option value="">${t("addonPlaceholder")}</option>
                 ${addonPresets
                   .map((addon) => `<option value="${escapeHtml(addon.name)}">${escapeHtml(addon.name)}</option>`)
                   .join("")}
               </select>
-              <button class="row-button" type="button" data-action="addAbility" data-hero-id="${hero.id}" title="Добавить скилл">${icon("plus")}</button>
-              <button class="row-button" type="button" data-action="deleteHero" data-hero-id="${hero.id}" title="Удалить героя">${icon("trash")}</button>
+              <button class="row-button" type="button" data-action="addAbility" data-hero-id="${hero.id}" title="${escapeHtml(t("addAbility"))}">${icon("plus")}</button>
+              <button class="row-button" type="button" data-action="deleteHero" data-hero-id="${hero.id}" title="${escapeHtml(t("deleteHero"))}">${icon("trash")}</button>
             `
         }
       </div>
@@ -590,7 +814,7 @@ function renderAbility(hero, ability, conflicts) {
   const isRunning = remaining > 0;
   const isMatchMode = state.mode === "match";
   const readyText = getReadyMatchText(ability);
-  const timerLabel = isRunning ? formatTime(remaining) : "Готов";
+  const timerLabel = isRunning ? formatTime(remaining) : t("ready");
   const hasConflict = hasHotkeyConflict(ability, conflicts);
   const conflictTitle = getHotkeyConflictTitle(ability, conflicts);
 
@@ -599,19 +823,19 @@ function renderAbility(hero, ability, conflicts) {
       ${
         isMatchMode
           ? `
-            <button class="row-button start-button star-button" type="button" data-action="startTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Запустить">${icon("play")}</button>
+            <button class="row-button start-button star-button" type="button" data-action="startTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("start"))}">${icon("play")}</button>
             <div class="ability-display ability-display-visual" title="${escapeHtml(ability.name)}">
               ${renderAbilityImage(hero, ability)}
             </div>
-            <input class="cooldown-input match-cooldown-input" data-field="cooldown" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="number" min="1" max="999" step="1" value="${escapeHtml(ability.cooldown)}" title="Кулдаун в секундах" />
+            <input class="cooldown-input match-cooldown-input" data-field="cooldown" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="number" min="1" max="999" step="1" value="${escapeHtml(ability.cooldown)}" title="${escapeHtml(t("cooldownSeconds"))}" />
             <div class="ult-badge ${ability.type === "ult" ? "is-ult" : ""}">${abilityTypeLabel(ability.type)}</div>
             <div class="key-badge ${hasConflict ? "has-conflict" : ""}" title="${escapeHtml(conflictTitle)}">${escapeHtml(ability.key || "-")}</div>
           `
           : `
-            <button class="row-button star-button ${ability.tracked ? "is-on" : ""}" type="button" data-action="toggleTracked" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Избранное">${icon("star")}</button>
-            <input class="ability-name" data-field="abilityName" data-hero-id="${hero.id}" data-ability-id="${ability.id}" value="${escapeHtml(ability.name)}" placeholder="Скилл" />
-            <input class="cooldown-input" data-field="cooldown" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="number" min="1" max="999" step="1" value="${escapeHtml(ability.cooldown)}" title="Кулдаун в секундах" />
-            <label class="ult-toggle" title="Ультимейт">
+            <button class="row-button star-button ${ability.tracked ? "is-on" : ""}" type="button" data-action="toggleTracked" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("favorite"))}">${icon("star")}</button>
+            <input class="ability-name" data-field="abilityName" data-hero-id="${hero.id}" data-ability-id="${ability.id}" value="${escapeHtml(ability.name)}" placeholder="${escapeHtml(t("skillPlaceholder"))}" />
+            <input class="cooldown-input" data-field="cooldown" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="number" min="1" max="999" step="1" value="${escapeHtml(ability.cooldown)}" title="${escapeHtml(t("cooldownSeconds"))}" />
+            <label class="ult-toggle" title="${escapeHtml(t("ultimate"))}">
               <input data-field="type" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="checkbox" ${ability.type === "ult" ? "checked" : ""} />
               Ult
             </label>
@@ -620,15 +844,15 @@ function renderAbility(hero, ability, conflicts) {
       }
       <div class="timer-cell">
         <div class="timer-main">${timerLabel}</div>
-        <div class="timer-sub">${readyText || (state.matchStartedAt ? "нет активного кд" : "матч не начат")}</div>
+        <div class="timer-sub">${readyText || (state.matchStartedAt ? t("noActiveCooldown") : t("matchNotStarted"))}</div>
         <div class="progress"><span style="width: ${percent}%"></span></div>
       </div>
       <div class="row-actions">
-        ${isMatchMode ? "" : `<button class="row-button start-button" type="button" data-action="startTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Запустить">${icon("play")}</button>`}
-        <button class="row-button copy-button" type="button" data-action="copyChat" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Скопировать текст для чата">${icon("copy")}</button>
-        <button class="row-button stop-button" type="button" data-action="stopTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Остановить">${icon("stop")}</button>
-        <button class="tiny-button" type="button" data-action="adjustTimer" data-delta="-5" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Минус 5 секунд">-5</button>
-        ${isMatchMode ? "" : `<button class="row-button" type="button" data-action="deleteAbility" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Удалить">${icon("trash")}</button>`}
+        ${isMatchMode ? "" : `<button class="row-button start-button" type="button" data-action="startTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("start"))}">${icon("play")}</button>`}
+        <button class="row-button copy-button" type="button" data-action="copyChat" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("copyChat"))}">${icon("copy")}</button>
+        <button class="row-button stop-button" type="button" data-action="stopTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("stop"))}">${icon("stop")}</button>
+        <button class="tiny-button" type="button" data-action="adjustTimer" data-delta="-5" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("minus5"))}">-5</button>
+        ${isMatchMode ? "" : `<button class="row-button" type="button" data-action="deleteAbility" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("delete"))}">${icon("trash")}</button>`}
       </div>
     </div>
   `;
@@ -652,9 +876,9 @@ function renderActiveTimerChip(item) {
       </div>
       <div class="active-chip-time">
         <strong>${formatTime(item.remaining)}</strong>
-        <span>${readyText || "без времени матча"}</span>
+        <span>${readyText || t("noMatchTime")}</span>
       </div>
-      <button class="row-button copy-button" type="button" data-action="copyChat" data-hero-id="${item.hero.id}" data-ability-id="${item.ability.id}" title="Скопировать текст для чата">${icon("copy")}</button>
+      <button class="row-button copy-button" type="button" data-action="copyChat" data-hero-id="${item.hero.id}" data-ability-id="${item.ability.id}" title="${escapeHtml(t("copyChat"))}">${icon("copy")}</button>
     </div>
   `;
 }
@@ -663,12 +887,12 @@ function updateActivePanel(activeTimers) {
   if (!els.activeSummary || !els.activeTimers) return;
 
   if (!activeTimers.length) {
-    els.activeSummary.textContent = "Нет";
-    els.activeTimers.innerHTML = `<div class="active-empty">Нет активных кулдаунов</div>`;
+    els.activeSummary.textContent = t("none");
+    els.activeTimers.innerHTML = `<div class="active-empty">${t("noActiveCooldowns")}</div>`;
     return;
   }
 
-  els.activeSummary.textContent = `${activeTimers.length} активно`;
+  els.activeSummary.textContent = t("activeCountText", { count: activeTimers.length });
   els.activeTimers.innerHTML = activeTimers.map(renderActiveTimerChip).join("");
 }
 
@@ -739,10 +963,10 @@ function updateTimers() {
 
     const remaining = getRemainingMs(ability, now);
     row.dataset.state = abilityState(ability, now);
-    row.querySelector(".timer-main").textContent = remaining ? formatTime(remaining) : "Готов";
+    row.querySelector(".timer-main").textContent = remaining ? formatTime(remaining) : t("ready");
     const sub = row.querySelector(".timer-sub");
     if (sub) {
-      sub.textContent = getReadyMatchText(ability) || (state.matchStartedAt ? "нет активного кд" : "матч не начат");
+      sub.textContent = getReadyMatchText(ability) || (state.matchStartedAt ? t("noActiveCooldown") : t("matchNotStarted"));
     }
     row.querySelector(".progress span").style.width = `${getProgressPercent(ability, now)}%`;
   }
@@ -817,7 +1041,7 @@ function startMatch() {
 
 function resetMatch() {
   if (!state.matchStartedAt) return;
-  if (!window.confirm("Сбросить матч и все активные кулдауны?")) return;
+  if (!window.confirm(t("resetMatchConfirm"))) return;
 
   state.matchStartedAt = null;
   clearCooldownTimers();
@@ -856,7 +1080,7 @@ function addAddonToHero(heroId, addonName) {
 
   const existing = hero.abilities.some((ability) => ability.name === addon.name);
   if (existing) {
-    showToast(`${addon.name} уже добавлен`);
+    showToast(t("addonExists", { name: addon.name }));
     return;
   }
 
@@ -878,7 +1102,7 @@ function copyChatText(heroId, abilityId, options = {}) {
 function copyActiveTimers(options = {}) {
   const text = makeActiveChatText();
   if (!text) {
-    showToast("Нет активных кулдаунов");
+    showToast(t("noActiveCooldowns"));
     return;
   }
 
@@ -906,7 +1130,7 @@ async function writeClipboardText(text, options = {}) {
   }
 
   if (!options.silent) {
-    window.prompt("Текст для чата:", text);
+    window.prompt(t("chatTextPrompt"), text);
   }
   return false;
 }
@@ -927,7 +1151,7 @@ function showToast(text) {
 }
 
 function showCopiedText(text) {
-  showToast(`Скопировано: ${text}`);
+  showToast(t("copied", { text }));
 }
 
 function setupDesktopIntegration() {
@@ -955,7 +1179,7 @@ function setRuntimeStatus(status) {
 }
 
 function addHero() {
-  const hero = createHero({ name: `Враг ${state.heroes.length + 1}`, color: colors[state.heroes.length % colors.length] }, state.heroes.length);
+  const hero = createHero({ name: `${t("enemy")} ${state.heroes.length + 1}`, color: colors[state.heroes.length % colors.length] }, state.heroes.length);
   state.heroes.push(hero);
   saveStateNow();
   render();
@@ -971,7 +1195,7 @@ function addAbility(heroId) {
   const hero = getHero(heroId);
   if (!hero) return;
 
-  hero.abilities.push(createAbility({ name: "Новый скилл", cooldown: state.minCooldown, tracked: true }));
+  hero.abilities.push(createAbility({ name: t("newAbility"), cooldown: state.minCooldown, tracked: true }));
   saveStateNow();
   render();
 }
@@ -995,15 +1219,15 @@ function exportState() {
   const data = JSON.stringify(state, null, 2);
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(data).catch(() => {
-      window.prompt("Настройки:", data);
+      window.prompt(t("settingsPrompt"), data);
     });
   } else {
-    window.prompt("Настройки:", data);
+    window.prompt(t("settingsPrompt"), data);
   }
 }
 
 function importState() {
-  const raw = window.prompt("Вставь JSON настроек:");
+  const raw = window.prompt(t("importSettingsPrompt"));
   if (!raw) return;
 
   try {
@@ -1021,7 +1245,7 @@ function importState() {
     saveStateNow();
     render();
   } catch {
-    window.alert("Не получилось прочитать настройки.");
+    window.alert(t("importSettingsError"));
   }
 }
 
@@ -1192,11 +1416,11 @@ async function loadVoicePackFiles(options = {}) {
     });
 
     if (els.openVoicePack && result?.directory) {
-      els.openVoicePack.title = `Открыть папку voice pack (${result.files?.length || 0} файлов)`;
+      els.openVoicePack.title = t("openVoicePackCount", { count: result.files?.length || 0 });
     }
   } catch {
     if (!options.silent) {
-      showToast("Не получилось прочитать voice pack");
+      showToast(t("voicePackReadError"));
     }
   }
 }
@@ -1235,7 +1459,7 @@ function fallbackAfterVoicePack(label) {
 function showVoicePackFallbackOnce(label) {
   if (voicePackFallbackShown) return;
   voicePackFallbackShown = true;
-  showToast(`Voice Pack: нет файла для ${label}, fallback`);
+  showToast(t("voicePackMissing", { label }));
 }
 
 function playVoicePackReady(label) {
@@ -1314,7 +1538,7 @@ function getPreferredVoice() {
 function showVoiceFallbackOnce() {
   if (voiceFallbackShown) return;
   voiceFallbackShown = true;
-  showToast("Voice: нет не-default English voice, играю Chime");
+  showToast(t("voiceFallback"));
 }
 
 function playVoiceReady(label) {
@@ -1364,7 +1588,7 @@ function warmUpVoices() {
 }
 
 function markReadyTitle(label) {
-  document.title = `${label} готов`;
+  document.title = t("readyTitle", { label });
   window.setTimeout(() => {
     document.title = "Dota Enemy CD";
   }, 2200);
@@ -1414,7 +1638,7 @@ function bindEvents() {
     const result = await desktopApi.openVoicePackFolder();
     await loadVoicePackFiles();
     if (result?.directory) {
-      showToast(`Voice pack: ${result.directory}`);
+      showToast(t("voicePackFolder", { directory: result.directory }));
     }
   });
 
@@ -1548,6 +1772,7 @@ function bindEvents() {
   });
 }
 
+applyLocale();
 bindEvents();
 render();
 setupDesktopIntegration();
