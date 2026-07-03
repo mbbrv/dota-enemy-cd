@@ -158,6 +158,10 @@ h1 {
   text-align: right;
 }
 
+.prestart-control input {
+  width: 50px;
+}
+
 .volume-control input {
   width: 96px;
   accent-color: var(--amber);
@@ -322,6 +326,10 @@ body[data-mode="match"] #importState {
   display: none;
 }
 
+body[data-mode="match"] .hotkey-notice {
+  display: none;
+}
+
 .app-layout {
   display: grid;
   gap: 16px;
@@ -342,6 +350,16 @@ body[data-mode="match"] #importState {
 
 .web-notice[hidden] {
   display: none;
+}
+
+.hotkey-notice {
+  padding: 10px 14px;
+  border: 1px solid rgba(109, 168, 255, 0.36);
+  border-radius: 8px;
+  background: rgba(109, 168, 255, 0.075);
+  color: #c7d7ff;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .status-strip {
@@ -666,7 +684,7 @@ body[data-mode="match"] #importState {
     "star name cd ult key"
     "timer timer timer timer timer"
     "controls controls controls controls controls";
-  grid-template-columns: 30px minmax(0, 1fr) 58px 46px 42px;
+  grid-template-columns: 30px minmax(0, 1fr) 58px 46px 78px;
   gap: 8px 7px;
   align-items: center;
   min-height: 132px;
@@ -783,11 +801,12 @@ body[data-mode="match"] .ability-row {
 
 .key-badge {
   grid-area: key;
+  gap: 4px;
   color: #d7fff8;
 }
 
 .key-badge.has-conflict,
-.key-input.has-conflict {
+.hotkey-field.has-conflict {
   border-color: rgba(233, 95, 106, 0.9);
   background: rgba(233, 95, 106, 0.12);
   color: #ffc2c7;
@@ -827,10 +846,63 @@ body[data-mode="match"] .ability-row {
   grid-area: key;
 }
 
+.hotkey-field {
+  grid-area: key;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--muted);
+  cursor: text;
+}
+
+.hotkey-field span,
+.key-badge span {
+  flex: 0 0 auto;
+  color: #9fb0ff;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hotkey-field:focus-within {
+  border-color: rgba(24, 183, 160, 0.8);
+  background: rgba(24, 183, 160, 0.09);
+}
+
 .cooldown-input,
 .key-input {
   padding: 0 6px;
   text-align: center;
+}
+
+.hotkey-field .key-input {
+  grid-area: auto;
+  min-width: 0;
+  width: 100%;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #d7fff8;
+  font-size: 15px;
+  font-weight: 900;
+  justify-self: stretch;
+}
+
+.hotkey-field .key-input::placeholder {
+  color: var(--quiet);
+}
+
+.hotkey-field .key-input:focus {
+  background: transparent;
 }
 
 .match-cooldown-input {
@@ -999,6 +1071,6 @@ body[data-mode="match"] .ability-row {
   }
 
   .ability-row {
-    grid-template-columns: 30px minmax(0, 1fr) 58px 46px 42px;
+    grid-template-columns: 30px minmax(0, 1fr) 58px 46px 78px;
   }
 }

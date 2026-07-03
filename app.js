@@ -92,6 +92,9 @@ const messages = {
     filterLabel: "Spell filter",
     heroPreset: "Hero preset...",
     hotkey: "Key",
+    hotkeyGuideBrowser: "Hotkeys: assign a key in the HK field on each row. In the web version, keys work only while this page is focused.",
+    hotkeyGuideDesktop: "Hotkeys: assign a key in the HK field on each row. Desktop uses Ctrl+Alt+Key to start and Ctrl+Alt+Shift+Key to copy.",
+    hotkeyShort: "HK",
     hotkeyConflict: "Hotkey conflict {key}: {names}",
     importSettings: "Import settings",
     importSettingsPrompt: "Paste settings JSON:",
@@ -115,6 +118,8 @@ const messages = {
     ready: "Ready",
     readyAt: "ready {time}",
     readyTitle: "{label} ready",
+    preMatchLabel: "to 0",
+    preMatchTitle: "Seconds before the match clock reaches 0:00 after pressing Start match",
     resetMatch: "Reset match",
     resetMatchConfirm: "Reset match and all active cooldowns?",
     resetMatchTitle: "Stop match and clear all cooldowns",
@@ -169,6 +174,9 @@ const messages = {
     filterLabel: "Фильтр скиллов",
     heroPreset: "Пресет героя...",
     hotkey: "Клавиша",
+    hotkeyGuideBrowser: "Хоткеи: назначь клавишу в поле HK у нужного скилла. В веб-версии клавиши работают только пока открыта эта страница.",
+    hotkeyGuideDesktop: "Хоткеи: назначь клавишу в поле HK у нужного скилла. В desktop-версии Ctrl+Alt+клавиша запускает таймер, Ctrl+Alt+Shift+клавиша копирует текст.",
+    hotkeyShort: "HK",
     hotkeyConflict: "Конфликт хоткея {key}: {names}",
     importSettings: "Импортировать настройки",
     importSettingsPrompt: "Вставь JSON настроек:",
@@ -192,6 +200,8 @@ const messages = {
     ready: "Готов",
     readyAt: "готов {time}",
     readyTitle: "{label} готов",
+    preMatchLabel: "до 0",
+    preMatchTitle: "Сколько секунд до 0:00 после нажатия «Начать матч»",
     resetMatch: "Сброс матча",
     resetMatchConfirm: "Сбросить матч и все активные кулдауны?",
     resetMatchTitle: "Остановить матч и сбросить все кулдауны",
@@ -267,6 +277,7 @@ const els = {
   matchClock: document.querySelector("#matchClock"),
   readyCount: document.querySelector("#readyCount"),
   nextReady: document.querySelector("#nextReady"),
+  preMatchSeconds: document.querySelector("#preMatchSeconds"),
   minCooldown: document.querySelector("#minCooldown"),
   volume: document.querySelector("#volume"),
   alertSound: document.querySelector("#alertSound"),
@@ -280,6 +291,7 @@ const els = {
   matchToggle: document.querySelector("#matchToggle"),
   desktopStatus: document.querySelector("#desktopStatus"),
   webNotice: document.querySelector("#webNotice"),
+  hotkeyNotice: document.querySelector("#hotkeyNotice"),
   activeSummary: document.querySelector("#activeSummary"),
   activeTimers: document.querySelector("#activeTimers"),
   addHero: document.querySelector("#addHero"),
@@ -319,7 +331,7 @@ function createAbility(data = {}) {
     endsAt,
     timerDurationMs: data.timerDurationMs || fallbackDurationMs,
     readyAt: data.readyAt || null,
-    readyMatchAtMs: data.readyMatchAtMs || null,
+    readyMatchAtMs: data.readyMatchAtMs ?? null,
   };
 }
 
@@ -343,6 +355,7 @@ function defaultState() {
     mode: "setup",
     filter: "all",
     minCooldown: 90,
+    preMatchSeconds: 0,
     matchStartedAt: null,
     soundEnabled: true,
     alertSound: "chime",
@@ -362,6 +375,7 @@ function loadState() {
       ...parsed,
       mode: parsed.mode === "match" ? "match" : "setup",
       minCooldown: clampNumber(parsed.minCooldown ?? 90, 1, 999),
+      preMatchSeconds: clampNumber(parsed.preMatchSeconds ?? 0, 0, 600),
       matchStartedAt: parsed.matchStartedAt || null,
       alertSound: normalizeAlertSound(parsed.alertSound),
       volume: clampNumber(parsed.volume ?? 0.55, 0, 1),
@@ -450,6 +464,13 @@ function applyLocale() {
     if (label) label.textContent = t("secondsShort");
   }
 
+  const preMatchControl = els.preMatchSeconds?.closest(".number-control");
+  if (preMatchControl) {
+    preMatchControl.title = t("preMatchTitle");
+    const label = preMatchControl.querySelector("span");
+    if (label) label.textContent = t("preMatchLabel");
+  }
+
   const volumeControl = els.volume?.closest(".volume-control");
   if (volumeControl) volumeControl.title = t("volume");
 
@@ -478,6 +499,7 @@ function applyLocale() {
   if (els.activeSummary) els.activeSummary.textContent = t("none");
   if (els.board) els.board.setAttribute("aria-label", t("boardLabel"));
   if (els.webNotice) els.webNotice.textContent = t("webNotice");
+  if (els.hotkeyNotice) els.hotkeyNotice.textContent = t(desktopApi?.isDesktop ? "hotkeyGuideDesktop" : "hotkeyGuideBrowser");
 }
 
 function slugifyAssetName(value) {
@@ -582,18 +604,19 @@ function formatTime(ms) {
 }
 
 function formatMatchTime(ms) {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const isBeforeStart = ms < 0;
+  const totalSeconds = isBeforeStart ? Math.ceil(Math.abs(ms) / 1000) : Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  return `${isBeforeStart ? "-" : ""}${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function getMatchElapsedMs(now = Date.now()) {
-  return state.matchStartedAt ? Math.max(0, now - state.matchStartedAt) : 0;
+  return state.matchStartedAt ? now - state.matchStartedAt : 0;
 }
 
 function getReadyMatchText(ability) {
-  if (!ability.readyMatchAtMs) return "";
+  if (ability.readyMatchAtMs == null) return "";
   return t("readyAt", { time: formatMatchTime(ability.readyMatchAtMs) });
 }
 
@@ -742,6 +765,7 @@ function render() {
 function syncControls() {
   document.body.dataset.mode = state.mode;
   els.minCooldown.value = state.minCooldown;
+  if (els.preMatchSeconds) els.preMatchSeconds.value = state.preMatchSeconds;
   els.volume.value = Math.round(state.volume * 100);
   els.alertSound.value = state.alertSound;
   els.soundToggle.setAttribute("aria-pressed", String(state.soundEnabled));
@@ -833,7 +857,7 @@ function renderAbility(hero, ability, conflicts) {
             </div>
             <input class="cooldown-input match-cooldown-input" data-field="cooldown" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="number" min="1" max="999" step="1" value="${escapeHtml(ability.cooldown)}" title="${escapeHtml(t("cooldownSeconds"))}" />
             <div class="ult-badge ${ability.type === "ult" ? "is-ult" : ""}">${abilityTypeLabel(ability.type)}</div>
-            <div class="key-badge ${hasConflict ? "has-conflict" : ""}" title="${escapeHtml(conflictTitle)}">${escapeHtml(ability.key || "-")}</div>
+            <div class="key-badge ${hasConflict ? "has-conflict" : ""}" title="${escapeHtml(conflictTitle)}"><span>${escapeHtml(t("hotkeyShort"))}</span>${escapeHtml(ability.key || "-")}</div>
           `
           : `
             <button class="row-button star-button ${ability.tracked ? "is-on" : ""}" type="button" data-action="toggleTracked" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="${escapeHtml(t("favorite"))}">${icon("star")}</button>
@@ -843,7 +867,10 @@ function renderAbility(hero, ability, conflicts) {
               <input data-field="type" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="checkbox" ${ability.type === "ult" ? "checked" : ""} />
               Ult
             </label>
-            <input class="key-input ${hasConflict ? "has-conflict" : ""}" data-field="key" data-hero-id="${hero.id}" data-ability-id="${ability.id}" maxlength="1" value="${escapeHtml(ability.key)}" title="${escapeHtml(conflictTitle)}" />
+            <label class="hotkey-field ${hasConflict ? "has-conflict" : ""}" title="${escapeHtml(conflictTitle)}">
+              <span>${escapeHtml(t("hotkeyShort"))}</span>
+              <input class="key-input" data-field="key" data-hero-id="${hero.id}" data-ability-id="${ability.id}" maxlength="1" value="${escapeHtml(ability.key)}" placeholder="-" aria-label="${escapeHtml(t("hotkey"))}" />
+            </label>
           `
       }
       <div class="timer-cell">
@@ -956,7 +983,7 @@ function updateTimers() {
   els.activeCount.textContent = String(activeCount);
   els.readyCount.textContent = String(readyCount);
   els.nextReady.textContent = next
-    ? `${next.hero.name}: ${next.ability.name} ${formatTime(getRemainingMs(next.ability, now))}${next.ability.readyMatchAtMs ? ` @ ${formatMatchTime(next.ability.readyMatchAtMs)}` : ""}`
+    ? `${next.hero.name}: ${next.ability.name} ${formatTime(getRemainingMs(next.ability, now))}${next.ability.readyMatchAtMs != null ? ` @ ${formatMatchTime(next.ability.readyMatchAtMs)}` : ""}`
     : "-";
   updateActivePanel(activeTimers);
   updateActionButtons(activeCount, readyCount);
@@ -1013,7 +1040,7 @@ function adjustTimer(heroId, abilityId, deltaSeconds) {
 
   ability.endsAt = Math.max(Date.now() + 1000, ability.endsAt + deltaSeconds * 1000);
   if (state.matchStartedAt) {
-    ability.readyMatchAtMs = Math.max(0, ability.endsAt - state.matchStartedAt);
+    ability.readyMatchAtMs = ability.endsAt - state.matchStartedAt;
   }
   saveStateNow();
   updateTimers();
@@ -1036,7 +1063,7 @@ function clearCooldownTimers() {
 }
 
 function startMatch() {
-  state.matchStartedAt = Date.now();
+  state.matchStartedAt = Date.now() + state.preMatchSeconds * 1000;
   state.mode = "match";
   clearCooldownTimers();
   saveStateNow();
@@ -1244,6 +1271,7 @@ function importState() {
       ...parsed,
       mode: parsed.mode === "match" ? "match" : "setup",
       minCooldown: clampNumber(parsed.minCooldown ?? 90, 1, 999),
+      preMatchSeconds: clampNumber(parsed.preMatchSeconds ?? 0, 0, 600),
       matchStartedAt: parsed.matchStartedAt || null,
       alertSound: normalizeAlertSound(parsed.alertSound),
       volume: clampNumber(parsed.volume ?? 0.55, 0, 1),
@@ -1623,6 +1651,11 @@ function bindEvents() {
     state.minCooldown = clampNumber(els.minCooldown.value, 1, 999);
     saveState();
     if (state.filter === "min") renderBoard();
+  });
+
+  els.preMatchSeconds?.addEventListener("input", () => {
+    state.preMatchSeconds = clampNumber(els.preMatchSeconds.value, 0, 600);
+    saveState();
   });
 
   els.volume.addEventListener("input", () => {

@@ -80,6 +80,11 @@
           Начать матч
         </button>
 
+        <label class="number-control prestart-control" title="Countdown before 0:00">
+          <span>to 0</span>
+          <input id="preMatchSeconds" type="number" min="0" max="600" step="5" value="0" />
+        </label>
+
         <span id="desktopStatus" class="desktop-status" data-state="browser">Browser</span>
 
         <div class="segmented" role="tablist" aria-label="Фильтр скиллов">
@@ -146,6 +151,7 @@
 
     <main class="app-layout">
       <section id="webNotice" class="web-notice" hidden></section>
+      <section id="hotkeyNotice" class="hotkey-notice"></section>
 
       <section class="status-strip" aria-live="polite">
         <div>
