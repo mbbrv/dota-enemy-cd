@@ -3,8 +3,6 @@
 const STORAGE_KEY = "dota-enemy-cd-state-v1";
 const READY_FLASH_MS = 7000;
 const SAVE_DEBOUNCE_MS = 120;
-const HOTKEY_BRIDGE_EVENTS_URL = "http://127.0.0.1:8765/events";
-const HOTKEY_BRIDGE_CLIPBOARD_URL = "http://127.0.0.1:8765/clipboard";
 const desktopApi = window.dotaCdDesktop || null;
 
 const colors = ["#18b7a0", "#f2b84b", "#e95f6a", "#6da8ff", "#b08cff", "#7bd88f"];
@@ -50,7 +48,7 @@ const els = {
   exportState: document.querySelector("#exportState"),
   importState: document.querySelector("#importState"),
   matchToggle: document.querySelector("#matchToggle"),
-  bridgeStatus: document.querySelector("#bridgeStatus"),
+  desktopStatus: document.querySelector("#desktopStatus"),
   addHero: document.querySelector("#addHero"),
   filterButtons: [...document.querySelectorAll("[data-filter]")],
   modeButtons: [...document.querySelectorAll("[data-mode]")],
@@ -59,9 +57,6 @@ const els = {
 let state = loadState();
 let audioContext = null;
 let saveTimer = null;
-let hotkeyBridgeTimer = null;
-let hotkeyBridgeOnline = false;
-const handledBridgeEventIds = new Set();
 
 function uid() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -605,18 +600,7 @@ async function writeClipboardText(text, options = {}) {
       return true;
     }
   } catch {
-    // Fall back to the local bridge below.
-  }
-
-  try {
-    const response = await fetch(HOTKEY_BRIDGE_CLIPBOARD_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: text,
-    });
-    if (response.ok) return true;
-  } catch {
-    // The bridge is optional; keep the browser fallback for manual clicks.
+    // Keep the prompt fallback below for plain browser mode.
   }
 
   if (!options.silent) {
@@ -640,58 +624,23 @@ function showCopiedText(text) {
   }, 2200);
 }
 
-function setHotkeyBridgeStatus(status) {
-  if (!els.bridgeStatus) return;
-
-  hotkeyBridgeOnline = status === "online";
-  els.bridgeStatus.dataset.state = status;
-  if (desktopApi?.isDesktop && status === "online") {
-    els.bridgeStatus.textContent = "Desktop";
-  } else {
-    els.bridgeStatus.textContent = status === "online" ? "Global on" : "Global off";
-  }
-}
-
-function startHotkeyBridgePolling() {
+function setupDesktopIntegration() {
   if (desktopApi?.isDesktop) {
-    setHotkeyBridgeStatus("online");
+    setRuntimeStatus("desktop");
     desktopApi.onHotkey((event) => {
       handleHotkeyCommand(event?.action, event?.key);
     });
     return;
   }
 
-  window.clearTimeout(hotkeyBridgeTimer);
-  pollHotkeyBridge();
+  setRuntimeStatus("browser");
 }
 
-async function pollHotkeyBridge() {
-  let nextDelay = hotkeyBridgeOnline ? 220 : 1200;
+function setRuntimeStatus(status) {
+  if (!els.desktopStatus) return;
 
-  try {
-    const response = await fetch(`${HOTKEY_BRIDGE_EVENTS_URL}?t=${Date.now()}`, {
-      cache: "no-store",
-    });
-    if (!response.ok) throw new Error("Bridge unavailable");
-
-    const events = await response.json();
-    setHotkeyBridgeStatus("online");
-    nextDelay = 160;
-
-    for (const event of Array.isArray(events) ? events : []) {
-      if (!event?.id || handledBridgeEventIds.has(event.id)) continue;
-      handledBridgeEventIds.add(event.id);
-      handleHotkeyCommand(event.action, event.key);
-    }
-
-    if (handledBridgeEventIds.size > 300) {
-      handledBridgeEventIds.clear();
-    }
-  } catch {
-    setHotkeyBridgeStatus("offline");
-  } finally {
-    hotkeyBridgeTimer = window.setTimeout(pollHotkeyBridge, nextDelay);
-  }
+  els.desktopStatus.dataset.state = status;
+  els.desktopStatus.textContent = status === "desktop" ? "Desktop" : "Browser";
 }
 
 function addHero() {
@@ -954,5 +903,5 @@ function bindEvents() {
 
 bindEvents();
 render();
-startHotkeyBridgePolling();
+setupDesktopIntegration();
 window.setInterval(updateTimers, 250);

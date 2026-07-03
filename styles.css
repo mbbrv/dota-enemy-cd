@@ -229,7 +229,7 @@ h1 {
   color: #ffe2a6;
 }
 
-.bridge-status {
+.desktop-status {
   display: inline-flex;
   align-items: center;
   height: 38px;
@@ -243,7 +243,7 @@ h1 {
   text-transform: uppercase;
 }
 
-.bridge-status::before {
+.desktop-status::before {
   width: 7px;
   height: 7px;
   margin-right: 7px;
@@ -252,21 +252,30 @@ h1 {
   content: "";
 }
 
-.bridge-status[data-state="online"] {
+.desktop-status[data-state="desktop"] {
   border-color: rgba(123, 216, 143, 0.7);
   color: #caffd3;
 }
 
-.bridge-status[data-state="online"]::before {
+.desktop-status[data-state="desktop"]::before {
   background: var(--green);
 }
 
-.bridge-status[data-state="error"] {
+.desktop-status[data-state="browser"] {
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.desktop-status[data-state="browser"]::before {
+  background: var(--quiet);
+}
+
+.desktop-status[data-state="error"] {
   border-color: rgba(233, 95, 106, 0.7);
   color: #ffb8be;
 }
 
-.bridge-status[data-state="error"]::before {
+.desktop-status[data-state="error"]::before {
   background: var(--red);
 }
 

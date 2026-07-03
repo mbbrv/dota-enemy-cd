@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-windows:
@@ -44,3 +44,31 @@ jobs:
           path: dist/*.exe
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish latest release
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "latest"
+          $title = "Latest Windows build"
+          $notes = "Automatic Windows build from commit $env:GITHUB_SHA."
+          $asset = Get-ChildItem -Path dist -Filter *.exe | Select-Object -First 1
+
+          if (-not $asset) {
+            throw "No exe found in dist"
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f $tag $env:GITHUB_SHA
+          git push origin "refs/tags/$tag" --force
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $asset.FullName --clobber
+            gh release edit $tag --title $title --notes $notes --target $env:GITHUB_SHA --latest
+          } else {
+            gh release create $tag $asset.FullName --title $title --notes $notes --target $env:GITHUB_SHA --latest
+          }

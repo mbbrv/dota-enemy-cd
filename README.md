@@ -6,15 +6,12 @@ Manual cooldown tracker for Dota 2 enemies. Use it on a second monitor to track 
 
 ## English
 
-### How To Start
+### Download
 
-Download the latest Windows `.exe` build from the project page and run it.
-
-If you are running from the project folder, use:
-
-```powershell
-npm run desktop
-```
+1. Open the GitHub project page.
+2. In the right sidebar, open **Releases**.
+3. Download the `.exe` file from **Latest Windows build**.
+4. Run the downloaded file.
 
 ### Setup Before A Match
 
@@ -35,8 +32,9 @@ Useful add-ons:
 
 1. Press `Start match` when the game begins.
 2. Switch to `Match` mode.
-3. When an enemy uses a tracked spell/item, start its timer manually.
-4. The app shows remaining cooldown and the match time when it should be ready.
+3. When an enemy uses a tracked spell or item, start its timer manually.
+4. The app shows the remaining cooldown and the match time when it should be ready.
+5. A sound plays when the timer expires if sound is enabled.
 
 ### Hotkeys
 
@@ -57,24 +55,21 @@ Black Hole cd 1:42 ready 12:34
 
 ## Русский
 
-**Дисклеймер:** приложение не читает и не меняет память, код, пакеты, логи, пиксели экрана или game state Dota 2. Все таймеры запускает игрок вручную.
+**Дисклеймер:** приложение не читает и не меняет память, код, пакеты, логи, пиксели экрана или состояние игры Dota 2. Все таймеры запускает игрок вручную.
 
-### Как Запустить
+### Скачать
 
-Скачай последнюю Windows `.exe` сборку со страницы проекта и запусти ее.
-
-Если запускаешь из папки проекта:
-
-```powershell
-npm run desktop
-```
+1. Открой страницу проекта на GitHub.
+2. Справа открой раздел **Releases**.
+3. Скачай `.exe` из релиза **Latest Windows build**.
+4. Запусти скачанный файл.
 
 ### Настройка Перед Матчем
 
 1. Открой режим `Настройка`.
 2. Выбери вражеских героев через выпадающие списки пресетов.
-3. Добавь предметы/ресурсы к каждому герою через `+ item/resource`.
-4. При необходимости поправь кулдауны.
+3. Добавь предметы/ресурсы к нужным героям через `+ item/resource`.
+4. Если нужно, поправь кулдауны вручную.
 5. Назначь клавишу каждому скиллу или предмету, который хочешь отслеживать.
 
 Полезные добавки:
@@ -89,7 +84,8 @@ npm run desktop
 1. Нажми `Начать матч`, когда начинается игра.
 2. Переключись в режим `Матч`.
 3. Когда враг использует отслеживаемый скилл или предмет, запусти таймер вручную.
-4. Приложение покажет оставшийся кулдаун и игровое время, когда кнопка должна быть готова.
+4. Приложение покажет оставшийся кулдаун и игровое время, когда способность должна быть готова.
+5. Если звук включен, по истечении таймера прозвучит сигнал.
 
 ### Хоткеи
 
