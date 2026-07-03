@@ -1,6 +1,7 @@
 "use strict";
 
 const STORAGE_KEY = "dota-enemy-cd-state-v1";
+const NOTICE_STORAGE_KEY = "dota-enemy-cd-dismissed-notices-v1";
 const READY_FLASH_MS = 7000;
 const SAVE_DEBOUNCE_MS = 120;
 const desktopApi = window.dotaCdDesktop || null;
@@ -79,6 +80,7 @@ const messages = {
     appSubtitle: "Manual timer board",
     boardLabel: "Enemy timers",
     chatTextPrompt: "Chat text:",
+    closeNotice: "Dismiss notice",
     copied: "Copied: {text}",
     cooldownSeconds: "Cooldown in seconds",
     copyActive: "Copy active cooldowns",
@@ -161,6 +163,7 @@ const messages = {
     appSubtitle: "Ручная доска таймеров",
     boardLabel: "Таймеры врагов",
     chatTextPrompt: "Текст для чата:",
+    closeNotice: "Закрыть подсказку",
     copied: "Скопировано: {text}",
     cooldownSeconds: "Кулдаун в секундах",
     copyActive: "Скопировать активные кулдауны",
@@ -300,6 +303,7 @@ const els = {
 };
 
 let state = loadState();
+let dismissedNotices = loadDismissedNotices();
 let audioContext = null;
 let saveTimer = null;
 let voiceFallbackShown = false;
@@ -398,6 +402,36 @@ function saveStateNow() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function loadDismissedNotices() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(NOTICE_STORAGE_KEY) || "[]");
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDismissedNotices() {
+  localStorage.setItem(NOTICE_STORAGE_KEY, JSON.stringify([...dismissedNotices]));
+}
+
+function syncNoticeVisibility() {
+  if (els.webNotice) {
+    els.webNotice.hidden = dismissedNotices.has("web") || els.desktopStatus?.dataset.state !== "browser";
+  }
+  if (els.hotkeyNotice) {
+    els.hotkeyNotice.hidden = dismissedNotices.has("hotkeys");
+  }
+}
+
+function dismissNotice(noticeId) {
+  if (!noticeId) return;
+
+  dismissedNotices.add(noticeId);
+  saveDismissedNotices();
+  syncNoticeVisibility();
+}
+
 function clampNumber(value, min, max) {
   const number = Number(value);
   if (!Number.isFinite(number)) return min;
@@ -432,6 +466,18 @@ function escapeHtml(value) {
 
 function icon(name) {
   return `<svg aria-hidden="true"><use href="#i-${name}"></use></svg>`;
+}
+
+function renderNotice(el, noticeId, text) {
+  if (!el) return;
+
+  el.dataset.noticeId = noticeId;
+  el.innerHTML = `
+    <span>${escapeHtml(text)}</span>
+    <button class="notice-close" type="button" data-action="dismissNotice" data-notice-id="${escapeHtml(noticeId)}" aria-label="${escapeHtml(t("closeNotice"))}" title="${escapeHtml(t("closeNotice"))}">
+      ${icon("x")}
+    </button>
+  `;
 }
 
 function applyLocale() {
@@ -498,8 +544,9 @@ function applyLocale() {
   if (activePanelLabel) activePanelLabel.textContent = t("activeCooldowns");
   if (els.activeSummary) els.activeSummary.textContent = t("none");
   if (els.board) els.board.setAttribute("aria-label", t("boardLabel"));
-  if (els.webNotice) els.webNotice.textContent = t("webNotice");
-  if (els.hotkeyNotice) els.hotkeyNotice.textContent = t(desktopApi?.isDesktop ? "hotkeyGuideDesktop" : "hotkeyGuideBrowser");
+  renderNotice(els.webNotice, "web", t("webNotice"));
+  renderNotice(els.hotkeyNotice, "hotkeys", t(desktopApi?.isDesktop ? "hotkeyGuideDesktop" : "hotkeyGuideBrowser"));
+  syncNoticeVisibility();
 }
 
 function slugifyAssetName(value) {
@@ -1204,9 +1251,7 @@ function setRuntimeStatus(status) {
 
   els.desktopStatus.dataset.state = status;
   els.desktopStatus.textContent = status === "desktop" ? "Desktop" : "Browser";
-  if (els.webNotice) {
-    els.webNotice.hidden = status !== "browser";
-  }
+  syncNoticeVisibility();
   if (els.openVoicePack) {
     els.openVoicePack.hidden = status !== "desktop" || !desktopApi?.openVoicePackFolder;
   }
@@ -1630,6 +1675,13 @@ function markReadyTitle(label) {
 }
 
 function bindEvents() {
+  document.addEventListener("click", (event) => {
+    const dismissButton = event.target.closest?.("[data-action='dismissNotice']");
+    if (!dismissButton) return;
+
+    dismissNotice(dismissButton.dataset.noticeId);
+  });
+
   els.filterButtons.forEach((button) => {
     button.addEventListener("click", () => {
       state.filter = button.dataset.filter;
