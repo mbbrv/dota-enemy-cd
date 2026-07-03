@@ -102,6 +102,10 @@
           <svg><use href="#i-reset"></use></svg>
         </button>
 
+        <button id="copyActive" class="icon-button" type="button" title="Скопировать активные кулдауны">
+          <svg><use href="#i-copy"></use></svg>
+        </button>
+
         <button id="exportState" class="icon-button" type="button" title="Скопировать настройки">
           <svg><use href="#i-download"></use></svg>
         </button>
@@ -135,6 +139,14 @@
           <span class="status-label">Ближайший</span>
           <strong id="nextReady">-</strong>
         </div>
+      </section>
+
+      <section class="active-panel" aria-live="polite">
+        <div class="active-panel-head">
+          <span class="status-label">Активные кулдауны</span>
+          <strong id="activeSummary">Нет</strong>
+        </div>
+        <div id="activeTimers" class="active-timers"></div>
       </section>
 
       <section id="board" class="enemy-grid" aria-label="Таймеры врагов"></section>

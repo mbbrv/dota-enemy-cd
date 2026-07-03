@@ -4,8 +4,46 @@ const STORAGE_KEY = "dota-enemy-cd-state-v1";
 const READY_FLASH_MS = 7000;
 const SAVE_DEBOUNCE_MS = 120;
 const desktopApi = window.dotaCdDesktop || null;
+const DOTA_ASSET_BASE = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react";
 
 const colors = ["#18b7a0", "#f2b84b", "#e95f6a", "#6da8ff", "#b08cff", "#7bd88f"];
+const heroImageSlugs = {
+  "Anti-Mage": "antimage",
+  "Centaur Warrunner": "centaur",
+  Doom: "doom_bringer",
+  Lifestealer: "life_stealer",
+  Magnus: "magnataur",
+  Necrophos: "necrolyte",
+  "Outworld Destroyer": "obsidian_destroyer",
+  "Queen of Pain": "queenofpain",
+  "Shadow Fiend": "nevermore",
+  Timbersaw: "shredder",
+  Treant: "treant",
+  "Treant Protector": "treant",
+  Underlord: "abyssal_underlord",
+  "Vengeful Spirit": "vengefulspirit",
+  Windranger: "windrunner",
+  "Wraith King": "skeleton_king",
+  Zeus: "zuus",
+};
+const itemImageSlugs = {
+  "Aeon Disk": "aeon_disk",
+  "Black King Bar": "black_king_bar",
+  Bloodstone: "bloodstone",
+  "Refresher Orb": "refresher",
+};
+const abilityImageSlugs = {
+  "Invoker:Cataclysm": "invoker_sun_strike",
+  "Juggernaut:Omnislash": "juggernaut_omni_slash",
+  "Mirana:Moonlight Shadow": "mirana_invis",
+  "Outworld Destroyer:Sanity's Eclipse": "obsidian_destroyer_sanity_eclipse",
+  "Shadow Fiend:Requiem of Souls": "nevermore_requiem",
+  "Techies:Blast Off!": "techies_suicide",
+  "Underlord:Fiend's Gate": "abyssal_underlord_dark_portal",
+  "Warlock:Chaotic Offering": "warlock_rain_of_chaos",
+  "Windranger:Focus Fire": "windrunner_focusfire",
+  "Zeus:Nimbus": "zuus_cloud",
+};
 const blockedPresetAbilities = new Set([
   "aegis",
   "aegis of the immortal",
@@ -45,10 +83,13 @@ const els = {
   volume: document.querySelector("#volume"),
   soundToggle: document.querySelector("#soundToggle"),
   resetTimers: document.querySelector("#resetTimers"),
+  copyActive: document.querySelector("#copyActive"),
   exportState: document.querySelector("#exportState"),
   importState: document.querySelector("#importState"),
   matchToggle: document.querySelector("#matchToggle"),
   desktopStatus: document.querySelector("#desktopStatus"),
+  activeSummary: document.querySelector("#activeSummary"),
+  activeTimers: document.querySelector("#activeTimers"),
   addHero: document.querySelector("#addHero"),
   filterButtons: [...document.querySelectorAll("[data-filter]")],
   modeButtons: [...document.querySelectorAll("[data-mode]")],
@@ -67,6 +108,10 @@ function uid() {
 }
 
 function createAbility(data = {}) {
+  const startedAt = data.startedAt || null;
+  const endsAt = data.endsAt || null;
+  const fallbackDurationMs = startedAt && endsAt ? Math.max(1000, endsAt - startedAt) : null;
+
   return {
     id: data.id || uid(),
     name: data.name || "Новый скилл",
@@ -74,8 +119,9 @@ function createAbility(data = {}) {
     type: ["ult", "item"].includes(data.type) ? data.type : "skill",
     key: normalizeHotkey(data.key || ""),
     tracked: Boolean(data.tracked),
-    startedAt: data.startedAt || null,
-    endsAt: data.endsAt || null,
+    startedAt,
+    endsAt,
+    timerDurationMs: data.timerDurationMs || fallbackDurationMs,
     readyAt: data.readyAt || null,
     readyMatchAtMs: data.readyMatchAtMs || null,
   };
@@ -172,6 +218,72 @@ function icon(name) {
   return `<svg aria-hidden="true"><use href="#i-${name}"></use></svg>`;
 }
 
+function slugifyAssetName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replaceAll("&", "and")
+    .replaceAll("'", "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function getAbbreviation(value) {
+  const words = String(value || "")
+    .replaceAll("'", "")
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean);
+  if (!words.length) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return words
+    .slice(0, 3)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getHeroImageSlug(hero) {
+  return hero.imageSlug || heroImageSlugs[hero.name] || slugifyAssetName(hero.name);
+}
+
+function getAbilityImageSlug(hero, ability) {
+  if (ability.imageSlug) return ability.imageSlug;
+  if (ability.type === "item") return itemImageSlugs[ability.name] || null;
+
+  const exactKey = `${hero.name}:${ability.name}`;
+  if (abilityImageSlugs[exactKey]) return abilityImageSlugs[exactKey];
+
+  return `${getHeroImageSlug(hero)}_${slugifyAssetName(ability.name)}`;
+}
+
+function getAssetUrl(kind, slug) {
+  if (!slug) return "";
+  return `${DOTA_ASSET_BASE}/${kind}/${slug}.png`;
+}
+
+function renderAssetImage(className, url, label, fallbackText) {
+  const safeLabel = escapeHtml(label);
+  const fallback = escapeHtml(fallbackText || getAbbreviation(label));
+  if (!url) {
+    return `<span class="${className} asset-frame has-fallback" title="${safeLabel}" aria-label="${safeLabel}"><span class="asset-fallback">${fallback}</span></span>`;
+  }
+
+  return `
+    <span class="${className} asset-frame" title="${safeLabel}" aria-label="${safeLabel}">
+      <img src="${escapeHtml(url)}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />
+      <span class="asset-fallback" hidden>${fallback}</span>
+    </span>
+  `;
+}
+
+function renderHeroImage(hero, className = "hero-portrait") {
+  return renderAssetImage(className, getAssetUrl("heroes", getHeroImageSlug(hero)), hero.name, getAbbreviation(hero.name));
+}
+
+function renderAbilityImage(hero, ability, className = "ability-icon") {
+  const kind = ability.type === "item" ? "items" : "abilities";
+  return renderAssetImage(className, getAssetUrl(kind, getAbilityImageSlug(hero, ability)), ability.name, getAbbreviation(ability.name));
+}
+
 function getHero(heroId) {
   return state.heroes.find((hero) => hero.id === heroId);
 }
@@ -261,27 +373,89 @@ function makeChatText(hero, ability) {
   return `${ability.name} ready`;
 }
 
-function findAbilityByHotkey(key) {
-  const normalizedKey = normalizeHotkey(key);
-  if (!normalizedKey) return null;
+function getActiveTimers(now = Date.now()) {
+  const timers = [];
 
   for (const hero of state.heroes) {
     for (const ability of hero.abilities) {
-      if (ability.key === normalizedKey && isAbilityVisible(ability)) {
-        return { hero, ability };
+      if (isActive(ability, now)) {
+        timers.push({ hero, ability, remaining: getRemainingMs(ability, now) });
       }
     }
   }
 
-  return null;
+  return timers.sort((a, b) => a.ability.endsAt - b.ability.endsAt);
+}
+
+function makeActiveChatText(now = Date.now()) {
+  return getActiveTimers(now)
+    .map(({ hero, ability }) => makeChatText(hero, ability))
+    .join(", ");
+}
+
+function getHotkeyConflicts() {
+  const byKey = new Map();
+
+  for (const hero of state.heroes) {
+    for (const ability of hero.abilities) {
+      if (!ability.key) continue;
+      const entries = byKey.get(ability.key) || [];
+      entries.push({ hero, ability });
+      byKey.set(ability.key, entries);
+    }
+  }
+
+  for (const [key, entries] of byKey) {
+    if (entries.length < 2) byKey.delete(key);
+  }
+
+  return byKey;
+}
+
+function hasHotkeyConflict(ability, conflicts) {
+  return Boolean(ability.key && conflicts.get(ability.key)?.some((entry) => entry.ability.id === ability.id));
+}
+
+function getHotkeyConflictTitle(ability, conflicts) {
+  const entries = ability.key ? conflicts.get(ability.key) : null;
+  if (!entries) return "Клавиша";
+  const names = entries.map((entry) => `${entry.hero.name}: ${entry.ability.name}`).join(", ");
+  return `Конфликт хоткея ${ability.key}: ${names}`;
+}
+
+function findAbilitiesByHotkey(key) {
+  const normalizedKey = normalizeHotkey(key);
+  if (!normalizedKey) return [];
+  const matches = [];
+
+  for (const hero of state.heroes) {
+    for (const ability of hero.abilities) {
+      if (ability.key === normalizedKey && isAbilityVisible(ability)) {
+        matches.push({ hero, ability });
+      }
+    }
+  }
+
+  return matches;
+}
+
+function showHotkeyConflict(key, matches) {
+  const names = matches.map((match) => `${match.hero.name}: ${match.ability.name}`).join(", ");
+  showToast(`Конфликт хоткея ${key}: ${names}`);
 }
 
 function handleHotkeyCommand(action, key) {
-  const match = findAbilityByHotkey(key);
-  if (!match) {
-    showCopiedText(`No visible timer for ${key}`);
+  const matches = findAbilitiesByHotkey(key);
+  if (!matches.length) {
+    showToast(`Нет видимого таймера для ${key}`);
     return;
   }
+  if (matches.length > 1) {
+    showHotkeyConflict(key, matches);
+    return;
+  }
+
+  const match = matches[0];
 
   if (action === "copy") {
     copyChatText(match.hero.id, match.ability.id, { silent: true });
@@ -310,8 +484,8 @@ function syncControls() {
   els.soundToggle.setAttribute("aria-pressed", String(state.soundEnabled));
   els.soundToggle.title = state.soundEnabled ? "Звук включен" : "Звук выключен";
   els.soundToggle.innerHTML = icon(state.soundEnabled ? "bell" : "bell-off");
-  els.matchToggle.innerHTML = `${icon(state.matchStartedAt ? "reset" : "play")}${state.matchStartedAt ? "Новый матч" : "Начать матч"}`;
-  els.matchToggle.title = state.matchStartedAt ? "Перезапустить матч и сбросить таймеры" : "Запустить игровые часы";
+  els.matchToggle.innerHTML = `${icon(state.matchStartedAt ? "reset" : "play")}${state.matchStartedAt ? "Сброс матча" : "Начать матч"}`;
+  els.matchToggle.title = state.matchStartedAt ? "Остановить матч и сбросить все кулдауны" : "Запустить игровые часы";
 
   els.filterButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.filter === state.filter);
@@ -323,14 +497,15 @@ function syncControls() {
 }
 
 function renderBoard() {
-  els.board.innerHTML = state.heroes.map(renderHero).join("");
+  const conflicts = getHotkeyConflicts();
+  els.board.innerHTML = state.heroes.map((hero) => renderHero(hero, conflicts)).join("");
 }
 
-function renderHero(hero) {
+function renderHero(hero, conflicts) {
   const visibleAbilities = hero.abilities.filter(isAbilityVisible);
   const isMatchMode = state.mode === "match";
   const rows = visibleAbilities.length
-    ? visibleAbilities.map((ability) => renderAbility(hero, ability)).join("")
+    ? visibleAbilities.map((ability) => renderAbility(hero, ability, conflicts)).join("")
     : `<div class="empty-state">Нет скиллов в текущем фильтре</div>`;
   const activeCount = hero.abilities.filter((ability) => isActive(ability)).length;
 
@@ -339,8 +514,14 @@ function renderHero(hero) {
       <div class="hero-top">
         ${
           isMatchMode
-            ? `<div class="hero-title"><strong>${escapeHtml(hero.name)}</strong><span>${activeCount ? `активно ${activeCount}` : "нет кд"}</span></div>`
+            ? `
+              <div class="hero-title hero-title-visual" title="${escapeHtml(hero.name)}">
+                ${renderHeroImage(hero)}
+                <span>${activeCount ? `активно ${activeCount}` : "нет кд"}</span>
+              </div>
+            `
             : `
+              ${renderHeroImage(hero, "hero-portrait hero-portrait-setup")}
               <input class="hero-name" data-field="heroName" data-hero-id="${hero.id}" value="${escapeHtml(hero.name)}" placeholder="Враг" />
               <select class="preset-select" data-field="preset" data-hero-id="${hero.id}">
                 <option value="">Пресет героя...</option>
@@ -366,7 +547,7 @@ function renderHero(hero) {
   `;
 }
 
-function renderAbility(hero, ability) {
+function renderAbility(hero, ability, conflicts) {
   const now = Date.now();
   const stateName = abilityState(ability, now);
   const remaining = getRemainingMs(ability, now);
@@ -375,20 +556,21 @@ function renderAbility(hero, ability) {
   const isMatchMode = state.mode === "match";
   const readyText = getReadyMatchText(ability);
   const timerLabel = isRunning ? formatTime(remaining) : "Готов";
+  const hasConflict = hasHotkeyConflict(ability, conflicts);
+  const conflictTitle = getHotkeyConflictTitle(ability, conflicts);
 
   return `
-    <div class="ability-row" data-state="${stateName}" data-hero-id="${hero.id}" data-ability-id="${ability.id}">
+    <div class="ability-row" data-state="${stateName}" data-hotkey-conflict="${hasConflict}" data-hero-id="${hero.id}" data-ability-id="${ability.id}">
       ${
         isMatchMode
           ? `
             <button class="row-button start-button star-button" type="button" data-action="startTimer" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Запустить">${icon("play")}</button>
-            <div class="ability-display">
-              <strong>${escapeHtml(ability.name)}</strong>
-              <span>${abilityTypeLabel(ability.type)} · CD ${escapeHtml(ability.cooldown)}s${ability.key ? ` · ${escapeHtml(ability.key)}` : ""}</span>
+            <div class="ability-display ability-display-visual" title="${escapeHtml(ability.name)}">
+              ${renderAbilityImage(hero, ability)}
             </div>
-            <div class="cooldown-badge">${escapeHtml(ability.cooldown)}s</div>
+            <input class="cooldown-input match-cooldown-input" data-field="cooldown" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="number" min="1" max="999" step="1" value="${escapeHtml(ability.cooldown)}" title="Кулдаун в секундах" />
             <div class="ult-badge ${ability.type === "ult" ? "is-ult" : ""}">${abilityTypeLabel(ability.type)}</div>
-            <div class="key-badge">${escapeHtml(ability.key || "-")}</div>
+            <div class="key-badge ${hasConflict ? "has-conflict" : ""}" title="${escapeHtml(conflictTitle)}">${escapeHtml(ability.key || "-")}</div>
           `
           : `
             <button class="row-button star-button ${ability.tracked ? "is-on" : ""}" type="button" data-action="toggleTracked" data-hero-id="${hero.id}" data-ability-id="${ability.id}" title="Избранное">${icon("star")}</button>
@@ -398,7 +580,7 @@ function renderAbility(hero, ability) {
               <input data-field="type" data-hero-id="${hero.id}" data-ability-id="${ability.id}" type="checkbox" ${ability.type === "ult" ? "checked" : ""} />
               Ult
             </label>
-            <input class="key-input" data-field="key" data-hero-id="${hero.id}" data-ability-id="${ability.id}" maxlength="1" value="${escapeHtml(ability.key)}" title="Клавиша" />
+            <input class="key-input ${hasConflict ? "has-conflict" : ""}" data-field="key" data-hero-id="${hero.id}" data-ability-id="${ability.id}" maxlength="1" value="${escapeHtml(ability.key)}" title="${escapeHtml(conflictTitle)}" />
           `
       }
       <div class="timer-cell">
@@ -419,9 +601,50 @@ function renderAbility(hero, ability) {
 
 function getProgressPercent(ability, now = Date.now()) {
   const remaining = getRemainingMs(ability, now);
-  if (!remaining || !ability.cooldown) return 0;
-  const total = Number(ability.cooldown) * 1000;
+  const total = ability.timerDurationMs || Number(ability.cooldown) * 1000;
+  if (!remaining || !total) return 0;
   return Math.max(0, Math.min(100, (remaining / total) * 100));
+}
+
+function renderActiveTimerChip(item) {
+  const readyText = getReadyMatchText(item.ability);
+  const label = `${item.hero.name}: ${item.ability.name}`;
+  return `
+    <div class="active-chip" data-hero-id="${item.hero.id}" data-ability-id="${item.ability.id}" title="${escapeHtml(label)}">
+      <div class="active-chip-media">
+        ${renderHeroImage(item.hero, "hero-portrait hero-portrait-chip")}
+        ${renderAbilityImage(item.hero, item.ability, "ability-icon ability-icon-chip")}
+      </div>
+      <div class="active-chip-time">
+        <strong>${formatTime(item.remaining)}</strong>
+        <span>${readyText || "без времени матча"}</span>
+      </div>
+      <button class="row-button copy-button" type="button" data-action="copyChat" data-hero-id="${item.hero.id}" data-ability-id="${item.ability.id}" title="Скопировать текст для чата">${icon("copy")}</button>
+    </div>
+  `;
+}
+
+function updateActivePanel(activeTimers) {
+  if (!els.activeSummary || !els.activeTimers) return;
+
+  if (!activeTimers.length) {
+    els.activeSummary.textContent = "Нет";
+    els.activeTimers.innerHTML = `<div class="active-empty">Нет активных кулдаунов</div>`;
+    return;
+  }
+
+  els.activeSummary.textContent = `${activeTimers.length} активно`;
+  els.activeTimers.innerHTML = activeTimers.map(renderActiveTimerChip).join("");
+}
+
+function updateActionButtons(activeCount, readyCount) {
+  const hasResettableTimers = activeCount > 0 || readyCount > 0;
+  if (els.resetTimers) {
+    els.resetTimers.disabled = !hasResettableTimers;
+  }
+  if (els.copyActive) {
+    els.copyActive.disabled = activeCount === 0;
+  }
 }
 
 function updateTimers() {
@@ -438,6 +661,7 @@ function updateTimers() {
         expired.push({ hero, ability });
         ability.endsAt = null;
         ability.startedAt = null;
+        ability.timerDurationMs = null;
         ability.readyAt = now;
       }
 
@@ -462,11 +686,17 @@ function updateTimers() {
     renderBoard();
   }
 
+  const activeTimers = getActiveTimers(now);
+  activeCount = activeTimers.length;
+  next = activeTimers[0] || null;
+
   els.activeCount.textContent = String(activeCount);
   els.readyCount.textContent = String(readyCount);
   els.nextReady.textContent = next
     ? `${next.hero.name}: ${next.ability.name} ${formatTime(getRemainingMs(next.ability, now))}${next.ability.readyMatchAtMs ? ` @ ${formatMatchTime(next.ability.readyMatchAtMs)}` : ""}`
     : "-";
+  updateActivePanel(activeTimers);
+  updateActionButtons(activeCount, readyCount);
 
   for (const row of els.board.querySelectorAll(".ability-row")) {
     const ability = getAbility(row.dataset.heroId, row.dataset.abilityId);
@@ -492,6 +722,7 @@ function startTimer(heroId, abilityId) {
   ability.cooldown = clampNumber(ability.cooldown, 1, 999);
   ability.startedAt = now;
   ability.endsAt = now + ability.cooldown * 1000;
+  ability.timerDurationMs = ability.cooldown * 1000;
   ability.readyMatchAtMs = state.matchStartedAt ? getMatchElapsedMs(now) + ability.cooldown * 1000 : null;
   ability.readyAt = null;
   saveStateNow();
@@ -505,6 +736,7 @@ function stopTimer(heroId, abilityId) {
 
   ability.startedAt = null;
   ability.endsAt = null;
+  ability.timerDurationMs = null;
   ability.readyAt = null;
   ability.readyMatchAtMs = null;
   saveStateNow();
@@ -524,23 +756,47 @@ function adjustTimer(heroId, abilityId, deltaSeconds) {
   updateTimers();
 }
 
-function startMatch() {
-  if (state.matchStartedAt && !window.confirm("Начать новый матч и сбросить активные таймеры?")) {
-    return;
-  }
+function updateAbilityCooldown(ability, value) {
+  ability.cooldown = clampNumber(value, 1, 999);
+}
 
-  state.matchStartedAt = Date.now();
-  state.mode = "match";
+function clearCooldownTimers() {
   for (const hero of state.heroes) {
     for (const ability of hero.abilities) {
       ability.startedAt = null;
       ability.endsAt = null;
+      ability.timerDurationMs = null;
       ability.readyAt = null;
       ability.readyMatchAtMs = null;
     }
   }
+}
+
+function startMatch() {
+  state.matchStartedAt = Date.now();
+  state.mode = "match";
+  clearCooldownTimers();
   saveStateNow();
   render();
+}
+
+function resetMatch() {
+  if (!state.matchStartedAt) return;
+  if (!window.confirm("Сбросить матч и все активные кулдауны?")) return;
+
+  state.matchStartedAt = null;
+  clearCooldownTimers();
+  saveStateNow();
+  render();
+}
+
+function toggleMatch() {
+  if (state.matchStartedAt) {
+    resetMatch();
+    return;
+  }
+
+  startMatch();
 }
 
 function applyHeroPreset(heroId, presetName) {
@@ -565,7 +821,7 @@ function addAddonToHero(heroId, addonName) {
 
   const existing = hero.abilities.some((ability) => ability.name === addon.name);
   if (existing) {
-    showCopiedText(`${addon.name} already added`);
+    showToast(`${addon.name} уже добавлен`);
     return;
   }
 
@@ -580,6 +836,17 @@ function copyChatText(heroId, abilityId, options = {}) {
   if (!hero || !ability) return;
 
   const text = makeChatText(hero, ability);
+  writeClipboardText(text, options);
+  showCopiedText(text);
+}
+
+function copyActiveTimers(options = {}) {
+  const text = makeActiveChatText();
+  if (!text) {
+    showToast("Нет активных кулдаунов");
+    return;
+  }
+
   writeClipboardText(text, options);
   showCopiedText(text);
 }
@@ -609,19 +876,23 @@ async function writeClipboardText(text, options = {}) {
   return false;
 }
 
-function showCopiedText(text) {
+function showToast(text) {
   let toast = document.querySelector(".copy-toast");
   if (!toast) {
     toast = document.createElement("div");
     toast.className = "copy-toast";
     document.body.append(toast);
   }
-  toast.textContent = `Скопировано: ${text}`;
+  toast.textContent = text;
   toast.dataset.visible = "true";
-  window.clearTimeout(showCopiedText.timer);
-  showCopiedText.timer = window.setTimeout(() => {
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => {
     toast.dataset.visible = "false";
   }, 2200);
+}
+
+function showCopiedText(text) {
+  showToast(`Скопировано: ${text}`);
 }
 
 function setupDesktopIntegration() {
@@ -675,14 +946,7 @@ function deleteAbility(heroId, abilityId) {
 }
 
 function resetTimers() {
-  for (const hero of state.heroes) {
-    for (const ability of hero.abilities) {
-      ability.startedAt = null;
-      ability.endsAt = null;
-      ability.readyAt = null;
-      ability.readyMatchAtMs = null;
-    }
-  }
+  clearCooldownTimers();
   saveStateNow();
   render();
 }
@@ -786,7 +1050,7 @@ function bindEvents() {
     });
   });
 
-  els.matchToggle.addEventListener("click", startMatch);
+  els.matchToggle.addEventListener("click", toggleMatch);
   els.minCooldown.addEventListener("input", () => {
     state.minCooldown = clampNumber(els.minCooldown.value, 1, 999);
     saveState();
@@ -806,9 +1070,18 @@ function bindEvents() {
   });
 
   els.resetTimers.addEventListener("click", resetTimers);
+  els.copyActive.addEventListener("click", copyActiveTimers);
   els.exportState.addEventListener("click", exportState);
   els.importState.addEventListener("click", importState);
   els.addHero.addEventListener("click", addHero);
+
+  els.activeTimers.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const { action, heroId, abilityId } = button.dataset;
+    if (action === "copyChat") copyChatText(heroId, abilityId);
+  });
 
   els.board.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
@@ -842,10 +1115,14 @@ function bindEvents() {
 
     if (field === "heroName" && hero) hero.name = target.value;
     if (field === "abilityName" && ability) ability.name = target.value;
-    if (field === "cooldown" && ability) ability.cooldown = clampNumber(target.value, 1, 999);
+    if (field === "cooldown" && ability) updateAbilityCooldown(ability, target.value);
     if (field === "key" && ability) {
       ability.key = normalizeHotkey(target.value);
       target.value = ability.key;
+      saveStateNow();
+      renderBoard();
+      updateTimers();
+      return;
     }
 
     saveState();
@@ -885,18 +1162,20 @@ function bindEvents() {
     const key = normalizeEventHotkey(event);
     if (!key) return;
 
-    for (const hero of state.heroes) {
-      for (const ability of hero.abilities) {
-        if (ability.key === key && isAbilityVisible(ability)) {
-          event.preventDefault();
-          if (event.shiftKey) {
-            copyChatText(hero.id, ability.id);
-          } else {
-            startTimer(hero.id, ability.id);
-          }
-          return;
-        }
-      }
+    const matches = findAbilitiesByHotkey(key);
+    if (!matches.length) return;
+
+    event.preventDefault();
+    if (matches.length > 1) {
+      showHotkeyConflict(key, matches);
+      return;
+    }
+
+    const match = matches[0];
+    if (event.shiftKey) {
+      copyChatText(match.hero.id, match.ability.id);
+    } else {
+      startTimer(match.hero.id, match.ability.id);
     }
   });
 }
