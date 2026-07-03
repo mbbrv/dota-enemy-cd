@@ -1,111 +1,109 @@
 # Dota Enemy CD
 
-Manual enemy cooldown tracker for Dota 2, designed for a second monitor.
+Manual cooldown tracker for Dota 2 enemies. Use it on a second monitor to track important enemy spells, items, and buyback timers.
 
-This app does not read Dota 2 memory, packets, logs, screen pixels, or game state. Timers are started manually by the player.
+**Disclaimer:** the app does not read or modify Dota 2 memory, code, packets, logs, screen pixels, or game state. All timers are started manually by the player.
 
 ## English
 
-### Desktop App
+### How To Start
 
-Primary run mode is the Electron desktop app:
+Download the latest Windows `.exe` build from the project page and run it.
+
+If you are running from the project folder, use:
 
 ```powershell
-npm install
 npm run desktop
 ```
 
-Desktop global hotkeys:
+### Setup Before A Match
+
+1. Open `Setup` mode.
+2. Pick enemy heroes from the hero preset dropdowns.
+3. Add items/resources to each hero with `+ item/resource`.
+4. Edit cooldowns if needed.
+5. Assign a key to each spell or item you want to track.
+
+Useful add-ons:
+
+- Buyback
+- Black King Bar
+- Refresher Orb
+- Aeon Disk
+
+### During A Match
+
+1. Press `Start match` when the game begins.
+2. Switch to `Match` mode.
+3. When an enemy uses a tracked spell/item, start its timer manually.
+4. The app shows remaining cooldown and the match time when it should be ready.
+
+### Hotkeys
 
 - `Ctrl+Alt+key` starts the timer assigned to that key.
-- `Ctrl+Alt+Shift+key` copies the short chat text for that timer.
-- The `Desktop` indicator in the top bar means global hotkeys are handled by Electron.
+- `Ctrl+Alt+Shift+key` copies a short chat message for that timer.
 
-The desktop app registers hotkeys through Electron's system API and writes to the clipboard through the Electron main process. It does not interact with the Dota 2 process.
+Example copied message:
 
-### CI Build
-
-On every push to `main`, GitHub Actions builds a portable Windows `.exe`.
-
-To download the build:
-
-1. Open the repository on GitHub.
-2. Go to `Actions`.
-3. Open the latest `Build Windows EXE` run.
-4. Download the `DotaEnemyCD-windows-portable` artifact.
-
-The same build can be created locally:
-
-```powershell
-npm run pack:win
+```text
+Black Hole cd 1:42 ready 12:34
 ```
 
-### Browser Fallback
+### Notes
 
-You can still open `index.html` directly in a browser and move it to a second monitor. In browser mode, normal hotkeys only work while the browser window is focused.
-
-The legacy `legacy/hotkeys.ps1` bridge is kept as a temporary browser fallback, but Electron is the main path.
-
-### Usage Notes
-
-- In `Setup` mode, choose enemy hero presets, edit cooldowns, and assign keys.
-- Presets live in `presets.js`: heroes are separate from item/resource add-ons.
-- Buyback is added to a specific hero through `+ item/resource`, with a 480 second cooldown.
-- In `Match` mode, press `Start match` to start the in-game clock.
-- Active timers show when the ability will be ready by match time.
-- The copy button copies short English chat text, for example `Black Hole cd 1:42 ready 12:34`.
 - Roshan/Aegis and Blink Dagger are intentionally not included.
-- Preset cooldowns are editable placeholders; verify values against the current Dota patch.
+- Cooldowns are editable because Dota patches can change values.
+- Keep the app open while playing if you want sound alerts and global hotkeys.
 
 ## Русский
 
-### Desktop-приложение
+**Дисклеймер:** приложение не читает и не меняет память, код, пакеты, логи, пиксели экрана или game state Dota 2. Все таймеры запускает игрок вручную.
 
-Основной способ запуска - Electron desktop app:
+### Как Запустить
+
+Скачай последнюю Windows `.exe` сборку со страницы проекта и запусти ее.
+
+Если запускаешь из папки проекта:
 
 ```powershell
-npm install
 npm run desktop
 ```
 
-Глобальные хоткеи в desktop-версии:
+### Настройка Перед Матчем
+
+1. Открой режим `Настройка`.
+2. Выбери вражеских героев через выпадающие списки пресетов.
+3. Добавь предметы/ресурсы к каждому герою через `+ item/resource`.
+4. При необходимости поправь кулдауны.
+5. Назначь клавишу каждому скиллу или предмету, который хочешь отслеживать.
+
+Полезные добавки:
+
+- Buyback
+- Black King Bar
+- Refresher Orb
+- Aeon Disk
+
+### Во Время Матча
+
+1. Нажми `Начать матч`, когда начинается игра.
+2. Переключись в режим `Матч`.
+3. Когда враг использует отслеживаемый скилл или предмет, запусти таймер вручную.
+4. Приложение покажет оставшийся кулдаун и игровое время, когда кнопка должна быть готова.
+
+### Хоткеи
 
 - `Ctrl+Alt+клавиша` запускает таймер, назначенный на эту клавишу.
-- `Ctrl+Alt+Shift+клавиша` копирует короткий текст для чата.
-- Индикатор `Desktop` в верхней панели означает, что глобальные хоткеи обрабатываются через Electron.
+- `Ctrl+Alt+Shift+клавиша` копирует короткое сообщение для чата.
 
-Desktop-версия регистрирует хоткеи через системный API Electron и пишет в clipboard через main process. Она не взаимодействует с процессом Dota 2.
+Пример сообщения:
 
-### CI-сборка
-
-При каждом push в `main` GitHub Actions собирает portable Windows `.exe`.
-
-Где скачать сборку:
-
-1. Открой репозиторий на GitHub.
-2. Перейди в `Actions`.
-3. Открой последний run `Build Windows EXE`.
-4. Скачай artifact `DotaEnemyCD-windows-portable`.
-
-Такую же сборку можно сделать локально:
-
-```powershell
-npm run pack:win
+```text
+Black Hole cd 1:42 ready 12:34
 ```
 
-### Browser fallback
+### Заметки
 
-Можно открыть `index.html` напрямую в браузере и перенести окно на второй монитор. В браузерном режиме обычные хоткеи работают только пока окно браузера в фокусе.
-
-Legacy-бридж `legacy/hotkeys.ps1` оставлен как временный fallback для браузерного режима, но основной путь - Electron.
-
-### Заметки по использованию
-
-- В режиме `Настройка` выбери пресеты героев, поправь кд и назначь клавиши.
-- База пресетов лежит в `presets.js`: герои отдельно, предметы/ресурсы отдельно в `addons`.
-- Buyback добавляется к конкретному герою через `+ item/resource`, кулдаун 480 секунд.
-- В режиме `Матч` нажми `Начать матч`, чтобы включить игровые часы.
-- Активный таймер показывает, когда скилл будет готов по игровому времени матча.
-- Кнопка copy копирует короткий английский текст для чата, например `Black Hole cd 1:42 ready 12:34`.
 - Roshan/Aegis и Blink Dagger намеренно не добавлены.
-- Стартовые кулдауны - редактируемые заготовки; сверяй значения с текущим патчем Dota.
+- Кулдауны можно редактировать, потому что патчи Dota могут менять значения.
+- Держи приложение открытым во время игры, если нужны звуковые сигналы и глобальные хоткеи.
