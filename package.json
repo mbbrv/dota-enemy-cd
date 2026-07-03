@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Manual Dota 2 enemy cooldown tracker with desktop global hotkeys.",
+  "author": "bebur",
   "main": "electron/main.cjs",
   "scripts": {
     "check": "node --check app.js && node --check presets.js && node --check electron/main.cjs && node --check electron/preload.cjs",
@@ -27,6 +28,7 @@
       "electron/**/*"
     ],
     "win": {
+      "signAndEditExecutable": false,
       "target": [
         "portable",
         "nsis"
