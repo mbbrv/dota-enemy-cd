@@ -143,6 +143,7 @@ const messages = {
     voicePackFolder: "Voice pack: {directory}",
     voicePackMissing: "Voice Pack: no file for {label}, fallback",
     voicePackReadError: "Could not read voice pack",
+    webNotice: "Web version: you can try the app without installing anything. Global hotkeys do not work in the browser; use the desktop app for hotkeys while Dota is focused.",
   },
   ru: {
     activeCooldowns: "Активные кулдауны",
@@ -219,6 +220,7 @@ const messages = {
     voicePackFolder: "Voice pack: {directory}",
     voicePackMissing: "Voice Pack: нет файла для {label}, fallback",
     voicePackReadError: "Не получилось прочитать voice pack",
+    webNotice: "Веб-версия: можно попробовать приложение без установки. Глобальные хоткеи в браузере не работают; для хоткеев поверх Dota нужна desktop-версия.",
   },
 };
 const blockedPresetAbilities = new Set([
@@ -277,6 +279,7 @@ const els = {
   importState: document.querySelector("#importState"),
   matchToggle: document.querySelector("#matchToggle"),
   desktopStatus: document.querySelector("#desktopStatus"),
+  webNotice: document.querySelector("#webNotice"),
   activeSummary: document.querySelector("#activeSummary"),
   activeTimers: document.querySelector("#activeTimers"),
   addHero: document.querySelector("#addHero"),
@@ -474,6 +477,7 @@ function applyLocale() {
   if (activePanelLabel) activePanelLabel.textContent = t("activeCooldowns");
   if (els.activeSummary) els.activeSummary.textContent = t("none");
   if (els.board) els.board.setAttribute("aria-label", t("boardLabel"));
+  if (els.webNotice) els.webNotice.textContent = t("webNotice");
 }
 
 function slugifyAssetName(value) {
@@ -1173,6 +1177,9 @@ function setRuntimeStatus(status) {
 
   els.desktopStatus.dataset.state = status;
   els.desktopStatus.textContent = status === "desktop" ? "Desktop" : "Browser";
+  if (els.webNotice) {
+    els.webNotice.hidden = status !== "browser";
+  }
   if (els.openVoicePack) {
     els.openVoicePack.hidden = status !== "desktop" || !desktopApi?.openVoicePackFolder;
   }

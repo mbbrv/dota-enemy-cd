@@ -330,6 +330,20 @@ body[data-mode="match"] #importState {
   padding: 16px 20px 28px;
 }
 
+.web-notice {
+  padding: 11px 14px;
+  border: 1px solid rgba(242, 184, 75, 0.4);
+  border-radius: 8px;
+  background: rgba(242, 184, 75, 0.08);
+  color: #ffe2a6;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.web-notice[hidden] {
+  display: none;
+}
+
 .status-strip {
   display: grid;
   grid-template-columns: 130px 130px 130px minmax(220px, 1fr);
