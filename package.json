@@ -9,6 +9,7 @@
     "check": "node --check app.js && node --check presets.js && node --check electron/main.cjs && node --check electron/preload.cjs",
     "desktop": "electron .",
     "start": "electron .",
+    "voice-pack:generate": "powershell -ExecutionPolicy Bypass -File scripts/generate-voice-pack.ps1 -Force",
     "pack:win": "electron-builder --win portable",
     "dist:win": "electron-builder --win nsis"
   },
@@ -25,6 +26,7 @@
       "styles.css",
       "app.js",
       "presets.js",
+      "voice-pack/**/*",
       "electron/**/*"
     ],
     "win": {

@@ -1,9 +1,12 @@
 "use strict";
 
-const { app, BrowserWindow, clipboard, globalShortcut, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, clipboard, globalShortcut, ipcMain, Menu, shell } = require("electron");
+const fs = require("node:fs/promises");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const HOTKEY_KEYS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const VOICE_PACK_EXTENSIONS = new Set([".mp3", ".wav", ".ogg", ".m4a"]);
 
 let mainWindow = null;
 
@@ -48,6 +51,33 @@ function registerGlobalShortcuts() {
 ipcMain.handle("clipboard:write", (_event, text) => {
   clipboard.writeText(String(text ?? ""));
   return true;
+});
+
+async function getVoicePackDirectory() {
+  const directory = path.join(app.getPath("userData"), "voice-pack");
+  await fs.mkdir(directory, { recursive: true });
+  return directory;
+}
+
+async function listVoicePackFiles() {
+  const directory = await getVoicePackDirectory();
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  const files = entries
+    .filter((entry) => entry.isFile() && VOICE_PACK_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+    .map((entry) => ({
+      name: entry.name,
+      src: pathToFileURL(path.join(directory, entry.name)).href,
+    }));
+
+  return { directory, files };
+}
+
+ipcMain.handle("voice-pack:list", () => listVoicePackFiles());
+
+ipcMain.handle("voice-pack:open", async () => {
+  const directory = await getVoicePackDirectory();
+  const error = await shell.openPath(directory);
+  return { directory, ok: !error, error };
 });
 
 app.whenReady().then(() => {

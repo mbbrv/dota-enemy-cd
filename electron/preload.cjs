@@ -19,4 +19,10 @@ contextBridge.exposeInMainWorld("dotaCdDesktop", {
   writeClipboard(text) {
     return ipcRenderer.invoke("clipboard:write", text);
   },
+  listVoicePackFiles() {
+    return ipcRenderer.invoke("voice-pack:list");
+  },
+  openVoicePackFolder() {
+    return ipcRenderer.invoke("voice-pack:open");
+  },
 });

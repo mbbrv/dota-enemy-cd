@@ -54,6 +54,10 @@
         <path d="M8 8h11v11H8z" />
         <path d="M5 16H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v1" />
       </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v2" />
+      </symbol>
     </svg>
 
     <header class="topbar">
@@ -97,6 +101,25 @@
         <label class="volume-control" title="Громкость сигнала">
           <input id="volume" type="range" min="0" max="100" value="55" />
         </label>
+
+        <label class="alert-control" title="Тип сигнала">
+          <span>Alert</span>
+          <select id="alertSound">
+            <option value="chime">Chime</option>
+            <option value="ping">Ping</option>
+            <option value="alarm">Alarm</option>
+            <option value="pack">Voice Pack</option>
+            <option value="voice">Voice</option>
+          </select>
+        </label>
+
+        <button id="openVoicePack" class="icon-button" type="button" title="Открыть папку voice pack" hidden>
+          <svg><use href="#i-folder"></use></svg>
+        </button>
+
+        <button id="testSound" class="icon-button" type="button" title="Проверить звук">
+          <svg><use href="#i-bell"></use></svg>
+        </button>
 
         <button id="resetTimers" class="icon-button" type="button" title="Сбросить активные таймеры">
           <svg><use href="#i-reset"></use></svg>
@@ -153,6 +176,7 @@
     </main>
 
     <script src="presets.js"></script>
+    <script src="voice-pack/manifest.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

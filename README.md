@@ -36,8 +36,9 @@ Useful add-ons:
 4. The app shows the remaining cooldown and the match time when it should be ready.
 5. Edit a cooldown in match mode if levels or items changed it. Running timers keep their original countdown.
 6. A sound plays when the timer expires if sound is enabled.
-7. Use the copy button in the top bar to copy all active cooldowns for chat.
-8. Use `Reset match` to stop the match clock, return it to `0:00`, and clear all cooldowns.
+7. Pick an alert style in the top bar: `Chime`, `Ping`, `Alarm`, `Voice Pack`, or `Voice`.
+8. Use the copy button in the top bar to copy all active cooldowns for chat.
+9. Use `Reset match` to stop the match clock, return it to `0:00`, and clear all cooldowns.
 
 ### Hotkeys
 
@@ -55,6 +56,8 @@ Black Hole cd 1:42 ready 12:34
 - Roshan/Aegis and Blink Dagger are intentionally not included.
 - Cooldowns are editable because Dota patches can change values.
 - Hero and spell images load when an internet connection is available. If an image is missing, the app shows a short fallback label.
+- In the desktop app, `Voice Pack` plays local audio files such as `black-hole-ready.mp3` from the app's voice-pack folder. Use the folder button near the alert selector to open it.
+- `Voice` uses a non-default English system/browser voice when one is available. If only the default voice is available, the app falls back to `Chime`.
 - Keep the app open while playing if you want sound alerts and global hotkeys.
 
 ## Русский
@@ -91,8 +94,9 @@ Black Hole cd 1:42 ready 12:34
 4. Приложение покажет оставшийся кулдаун и игровое время, когда способность должна быть готова.
 5. Если кулдаун поменялся из-за уровня или предметов, его можно поправить прямо в режиме матча. Уже запущенные таймеры продолжат идти как были.
 6. Если звук включен, по истечении таймера прозвучит сигнал.
-7. Кнопка копирования в верхней панели копирует все активные кулдауны для чата.
-8. `Сброс матча` останавливает игровые часы, возвращает их на `0:00` и очищает все кулдауны.
+7. В верхней панели можно выбрать тип сигнала: `Chime`, `Ping`, `Alarm`, `Voice Pack` или `Voice`.
+8. Кнопка копирования в верхней панели копирует все активные кулдауны для чата.
+9. `Сброс матча` останавливает игровые часы, возвращает их на `0:00` и очищает все кулдауны.
 
 ### Хоткеи
 
@@ -110,4 +114,6 @@ Black Hole cd 1:42 ready 12:34
 - Roshan/Aegis и Blink Dagger намеренно не добавлены.
 - Кулдауны можно редактировать, потому что патчи Dota могут менять значения.
 - Картинки героев и скиллов загружаются при наличии интернета. Если картинка недоступна, приложение покажет короткую текстовую заглушку.
+- В desktop-приложении `Voice Pack` проигрывает локальные аудиофайлы вроде `black-hole-ready.mp3` из папки voice-pack приложения. Открыть ее можно кнопкой с папкой рядом с выбором сигнала.
+- `Voice` использует не-default английский системный/браузерный голос, если он доступен. Если доступен только default-голос, приложение откатится на `Chime`.
 - Держи приложение открытым во время игры, если нужны звуковые сигналы и глобальные хоткеи.

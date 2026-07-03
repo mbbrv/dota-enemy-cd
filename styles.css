@@ -128,7 +128,8 @@ h1 {
 }
 
 .number-control,
-.volume-control {
+.volume-control,
+.alert-control {
   display: inline-flex;
   align-items: center;
   height: 38px;
@@ -139,7 +140,8 @@ h1 {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.number-control span {
+.number-control span,
+.alert-control span {
   color: var(--muted);
   font-size: 12px;
 }
@@ -156,6 +158,21 @@ h1 {
 .volume-control input {
   width: 96px;
   accent-color: var(--amber);
+}
+
+.alert-control select {
+  width: 116px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  color-scheme: dark;
+  font-weight: 800;
+}
+
+.alert-control option {
+  background: var(--panel-strong);
+  color: var(--text);
 }
 
 .icon-button,

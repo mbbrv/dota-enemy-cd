@@ -44,6 +44,27 @@ const abilityImageSlugs = {
   "Windranger:Focus Fire": "windrunner_focusfire",
   "Zeus:Nimbus": "zuus_cloud",
 };
+const voicePackConfig = window.DOTA_ENEMY_CD_VOICE_PACK || {};
+const voicePackAudioExtensions = new Set(["mp3", "wav", "ogg", "m4a"]);
+const voicePronunciations = new Map([
+  ["BKB", "B K B"],
+  ["Black King Bar", "B K B"],
+  ["OD", "O D"],
+  ["Outworld Destroyer", "Outworld Destroyer"],
+  ["Aghanim", "Aganim"],
+  ["Aghanim's", "Aganim's"],
+  ["Aghanim's Scepter", "Aganim's Scepter"],
+  ["Aghanim's Shard", "Aganim's Shard"],
+  ["Omnislash", "Omni slash"],
+  ["Chronosphere", "Chrono sphere"],
+  ["Sanity's Eclipse", "Sanity's Eclipse"],
+  ["Requiem of Souls", "Requiem of Souls"],
+]);
+const voicePackAliases = new Map([
+  ["Black King Bar", ["bkb"]],
+  ["Refresher Orb", ["refresher"]],
+  ["Outworld Destroyer", ["od"]],
+]);
 const blockedPresetAbilities = new Set([
   "aegis",
   "aegis of the immortal",
@@ -81,6 +102,9 @@ const els = {
   nextReady: document.querySelector("#nextReady"),
   minCooldown: document.querySelector("#minCooldown"),
   volume: document.querySelector("#volume"),
+  alertSound: document.querySelector("#alertSound"),
+  testSound: document.querySelector("#testSound"),
+  openVoicePack: document.querySelector("#openVoicePack"),
   soundToggle: document.querySelector("#soundToggle"),
   resetTimers: document.querySelector("#resetTimers"),
   copyActive: document.querySelector("#copyActive"),
@@ -98,6 +122,10 @@ const els = {
 let state = loadState();
 let audioContext = null;
 let saveTimer = null;
+let voiceFallbackShown = false;
+let voicePackFallbackShown = false;
+let activeVoicePackAudio = null;
+const voicePackFiles = new Map();
 
 function uid() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -149,6 +177,7 @@ function defaultState() {
     minCooldown: 90,
     matchStartedAt: null,
     soundEnabled: true,
+    alertSound: "chime",
     volume: 0.55,
     heroes: starterHeroes.map(createHero),
   };
@@ -166,6 +195,7 @@ function loadState() {
       mode: parsed.mode === "match" ? "match" : "setup",
       minCooldown: clampNumber(parsed.minCooldown ?? 90, 1, 999),
       matchStartedAt: parsed.matchStartedAt || null,
+      alertSound: normalizeAlertSound(parsed.alertSound),
       volume: clampNumber(parsed.volume ?? 0.55, 0, 1),
       heroes: Array.isArray(parsed.heroes) ? parsed.heroes.map(createHero) : defaultState().heroes,
     };
@@ -190,6 +220,10 @@ function clampNumber(value, min, max) {
   const number = Number(value);
   if (!Number.isFinite(number)) return min;
   return Math.min(max, Math.max(min, number));
+}
+
+function normalizeAlertSound(value) {
+  return ["chime", "ping", "alarm", "pack", "voice"].includes(value) ? value : "chime";
 }
 
 function normalizeHotkey(value) {
@@ -481,6 +515,7 @@ function syncControls() {
   document.body.dataset.mode = state.mode;
   els.minCooldown.value = state.minCooldown;
   els.volume.value = Math.round(state.volume * 100);
+  els.alertSound.value = state.alertSound;
   els.soundToggle.setAttribute("aria-pressed", String(state.soundEnabled));
   els.soundToggle.title = state.soundEnabled ? "Звук включен" : "Звук выключен";
   els.soundToggle.innerHTML = icon(state.soundEnabled ? "bell" : "bell-off");
@@ -898,6 +933,7 @@ function showCopiedText(text) {
 function setupDesktopIntegration() {
   if (desktopApi?.isDesktop) {
     setRuntimeStatus("desktop");
+    loadVoicePackFiles({ silent: true });
     desktopApi.onHotkey((event) => {
       handleHotkeyCommand(event?.action, event?.key);
     });
@@ -905,6 +941,7 @@ function setupDesktopIntegration() {
   }
 
   setRuntimeStatus("browser");
+  loadVoicePackFiles({ silent: true });
 }
 
 function setRuntimeStatus(status) {
@@ -912,6 +949,9 @@ function setRuntimeStatus(status) {
 
   els.desktopStatus.dataset.state = status;
   els.desktopStatus.textContent = status === "desktop" ? "Desktop" : "Browser";
+  if (els.openVoicePack) {
+    els.openVoicePack.hidden = status !== "desktop" || !desktopApi?.openVoicePackFolder;
+  }
 }
 
 function addHero() {
@@ -974,6 +1014,7 @@ function importState() {
       mode: parsed.mode === "match" ? "match" : "setup",
       minCooldown: clampNumber(parsed.minCooldown ?? 90, 1, 999),
       matchStartedAt: parsed.matchStartedAt || null,
+      alertSound: normalizeAlertSound(parsed.alertSound),
       volume: clampNumber(parsed.volume ?? 0.55, 0, 1),
       heroes: Array.isArray(parsed.heroes) ? parsed.heroes.map(createHero) : defaultState().heroes,
     };
@@ -1001,32 +1042,328 @@ function ensureAudio() {
   return audioContext;
 }
 
-function playReadySound(label) {
+function getAlertPattern(alertSound = state.alertSound) {
+  if (alertSound === "ping") {
+    return {
+      type: "triangle",
+      notes: [
+        { frequency: 1046, offset: 0, duration: 0.09 },
+        { frequency: 1046, offset: 0.18, duration: 0.09 },
+      ],
+      volumeScale: 0.16,
+    };
+  }
+
+  if (alertSound === "alarm") {
+    return {
+      type: "square",
+      notes: [
+        { frequency: 520, offset: 0, duration: 0.16 },
+        { frequency: 390, offset: 0.18, duration: 0.16 },
+        { frequency: 520, offset: 0.36, duration: 0.2 },
+      ],
+      volumeScale: 0.12,
+    };
+  }
+
+  return {
+    type: "sine",
+    notes: [
+      { frequency: 740, offset: 0, duration: 0.1 },
+      { frequency: 932, offset: 0.14, duration: 0.1 },
+      { frequency: 1175, offset: 0.28, duration: 0.2 },
+    ],
+    volumeScale: 0.18,
+  };
+}
+
+function playToneAlert(label, alertSound = state.alertSound) {
   const ctx = ensureAudio();
-  if (!ctx || !state.soundEnabled) return;
+  if (!ctx) return;
 
-  const volume = Math.max(0.001, state.volume * 0.18);
+  const pattern = getAlertPattern(alertSound);
+  const volume = Math.max(0.001, state.volume * pattern.volumeScale);
   const start = ctx.currentTime + 0.02;
-  const notes = [740, 932, 1175];
 
-  notes.forEach((frequency, index) => {
+  pattern.notes.forEach((note) => {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
-    const noteStart = start + index * 0.14;
-    const duration = index === notes.length - 1 ? 0.2 : 0.1;
+    const noteStart = start + note.offset;
 
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(frequency, noteStart);
+    oscillator.type = pattern.type;
+    oscillator.frequency.setValueAtTime(note.frequency, noteStart);
     gain.gain.setValueAtTime(0.0001, noteStart);
     gain.gain.exponentialRampToValueAtTime(volume, noteStart + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
+    gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + note.duration);
 
     oscillator.connect(gain);
     gain.connect(ctx.destination);
     oscillator.start(noteStart);
-    oscillator.stop(noteStart + duration + 0.03);
+    oscillator.stop(noteStart + note.duration + 0.03);
   });
 
+  markReadyTitle(label);
+}
+
+function getVoiceLabel(label) {
+  const cleanLabel = String(label || "Cooldown")
+    .replace(/[()[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const exact = voicePronunciations.get(cleanLabel);
+  if (exact) return exact;
+
+  return cleanLabel
+    .split(" ")
+    .map((part) => voicePronunciations.get(part) || part)
+    .join(" ");
+}
+
+function makeVoiceAlertText(label) {
+  return `${getVoiceLabel(label)} is ready now`;
+}
+
+function stripAudioExtension(name) {
+  return String(name || "").replace(/\.(mp3|wav|ogg|m4a)$/i, "");
+}
+
+function voicePackKey(value) {
+  return stripAudioExtension(value)
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function resolveVoicePackSource(src) {
+  return String(src || "").trim();
+}
+
+function registerVoicePackFile(label, src) {
+  const key = voicePackKey(label);
+  const source = resolveVoicePackSource(src);
+  if (!key || !source) return;
+
+  voicePackFiles.set(key, source);
+}
+
+function registerVoicePackAudioFile(name, src) {
+  const fileName = String(name || "");
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  if (!voicePackAudioExtensions.has(extension)) return;
+
+  registerVoicePackFile(stripAudioExtension(fileName), src);
+}
+
+function registerBundledVoicePackFiles() {
+  const files = voicePackConfig.files || {};
+
+  if (Array.isArray(files)) {
+    files.forEach((entry) => {
+      if (typeof entry === "string") {
+        registerVoicePackAudioFile(entry, entry);
+        return;
+      }
+
+      registerVoicePackAudioFile(entry?.name, entry?.src);
+    });
+  } else {
+    Object.entries(files).forEach(([label, src]) => {
+      registerVoicePackFile(label, src);
+    });
+  }
+
+  if (voicePackConfig.fallback) {
+    registerVoicePackFile("default", voicePackConfig.fallback);
+  }
+}
+
+async function loadVoicePackFiles(options = {}) {
+  voicePackFiles.clear();
+  registerBundledVoicePackFiles();
+
+  if (!desktopApi?.listVoicePackFiles) return;
+
+  try {
+    const result = await desktopApi.listVoicePackFiles();
+    (result?.files || []).forEach((file) => {
+      registerVoicePackAudioFile(file.name, file.src);
+    });
+
+    if (els.openVoicePack && result?.directory) {
+      els.openVoicePack.title = `Открыть папку voice pack (${result.files?.length || 0} файлов)`;
+    }
+  } catch {
+    if (!options.silent) {
+      showToast("Не получилось прочитать voice pack");
+    }
+  }
+}
+
+function getVoicePackCandidateKeys(label) {
+  const cleanLabel = String(label || "").replace(/\s+/g, " ").trim();
+  const baseKey = voicePackKey(cleanLabel);
+  const spokenKey = voicePackKey(getVoiceLabel(cleanLabel));
+  const aliases = voicePackAliases.get(cleanLabel) || [];
+
+  return [
+    ...aliases.flatMap((alias) => [`${alias}-ready`, alias]),
+    `${baseKey}-ready`,
+    `${baseKey}-is-ready`,
+    baseKey,
+    `${spokenKey}-ready`,
+    spokenKey,
+    "cooldown-ready",
+    "default",
+  ].filter(Boolean);
+}
+
+function getVoicePackSource(label) {
+  for (const key of getVoicePackCandidateKeys(label)) {
+    if (voicePackFiles.has(key)) return voicePackFiles.get(key);
+  }
+
+  return "";
+}
+
+function fallbackAfterVoicePack(label) {
+  if (playVoiceReady(label)) return;
+  playToneAlert(label, "chime");
+}
+
+function showVoicePackFallbackOnce(label) {
+  if (voicePackFallbackShown) return;
+  voicePackFallbackShown = true;
+  showToast(`Voice Pack: нет файла для ${label}, fallback`);
+}
+
+function playVoicePackReady(label) {
+  const src = getVoicePackSource(label);
+  if (!src) {
+    showVoicePackFallbackOnce(label);
+    fallbackAfterVoicePack(label);
+    return true;
+  }
+
+  let didFallback = false;
+  const fallback = () => {
+    if (didFallback) return;
+    didFallback = true;
+    showVoicePackFallbackOnce(label);
+    fallbackAfterVoicePack(label);
+  };
+
+  if (activeVoicePackAudio) {
+    activeVoicePackAudio.pause();
+    activeVoicePackAudio = null;
+  }
+
+  const audio = new Audio(src);
+  activeVoicePackAudio = audio;
+  audio.volume = clampNumber(state.volume, 0, 1);
+  audio.addEventListener("ended", () => {
+    if (activeVoicePackAudio === audio) activeVoicePackAudio = null;
+  }, { once: true });
+  audio.addEventListener("error", fallback, { once: true });
+
+  const playPromise = audio.play();
+  if (playPromise?.catch) playPromise.catch(fallback);
+
+  markReadyTitle(label);
+  return true;
+}
+
+function isDefaultVoice(voice) {
+  const name = String(voice?.name || "").toLowerCase();
+  return Boolean(voice?.default) || name === "default" || name.includes("system default");
+}
+
+function isEnglishVoice(voice) {
+  return String(voice?.lang || "").toLowerCase().startsWith("en");
+}
+
+function scoreVoice(voice) {
+  const name = String(voice.name || "").toLowerCase();
+  const lang = String(voice.lang || "").toLowerCase();
+  let score = 0;
+
+  if (lang === "en-us") score += 30;
+  if (lang === "en-gb") score += 24;
+  if (lang.startsWith("en")) score += 10;
+  if (name.includes("google")) score += 30;
+  if (name.includes("microsoft")) score += 24;
+  if (name.includes("natural") || name.includes("online")) score += 12;
+  if (name.includes("aria") || name.includes("jenny") || name.includes("guy")) score += 8;
+  if (name.includes("david") || name.includes("zira")) score += 6;
+  if (voice.localService) score += 2;
+
+  return score;
+}
+
+function getPreferredVoice() {
+  const synth = window.speechSynthesis;
+  if (!synth?.getVoices) return null;
+
+  return synth
+    .getVoices()
+    .filter((voice) => isEnglishVoice(voice) && !isDefaultVoice(voice))
+    .sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] || null;
+}
+
+function showVoiceFallbackOnce() {
+  if (voiceFallbackShown) return;
+  voiceFallbackShown = true;
+  showToast("Voice: нет не-default English voice, играю Chime");
+}
+
+function playVoiceReady(label) {
+  const synth = window.speechSynthesis;
+  if (!synth || typeof SpeechSynthesisUtterance !== "function") return false;
+
+  const voice = getPreferredVoice();
+  if (!voice) {
+    showVoiceFallbackOnce();
+    return false;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(makeVoiceAlertText(label));
+  utterance.voice = voice;
+  utterance.lang = voice.lang || "en-US";
+  utterance.rate = 0.98;
+  utterance.pitch = 1;
+  utterance.volume = clampNumber(state.volume, 0, 1);
+
+  synth.cancel();
+  synth.speak(utterance);
+  markReadyTitle(label);
+  return true;
+}
+
+function playReadySound(label) {
+  if (!state.soundEnabled) return;
+
+  if (state.alertSound === "pack") {
+    playVoicePackReady(label);
+    return;
+  }
+
+  if (state.alertSound === "voice") {
+    if (playVoiceReady(label)) return;
+    playToneAlert(label, "chime");
+    return;
+  }
+
+  playToneAlert(label);
+}
+
+function warmUpVoices() {
+  if (window.speechSynthesis?.getVoices) {
+    window.speechSynthesis.getVoices();
+  }
+}
+
+function markReadyTitle(label) {
   document.title = `${label} готов`;
   window.setTimeout(() => {
     document.title = "Dota Enemy CD";
@@ -1062,11 +1399,42 @@ function bindEvents() {
     saveState();
   });
 
+  els.alertSound.addEventListener("change", async () => {
+    state.alertSound = normalizeAlertSound(els.alertSound.value);
+    saveStateNow();
+    if (state.alertSound === "pack") {
+      await loadVoicePackFiles({ silent: true });
+    }
+    playReadySound("Black Hole");
+  });
+
+  els.openVoicePack?.addEventListener("click", async () => {
+    if (!desktopApi?.openVoicePackFolder) return;
+
+    const result = await desktopApi.openVoicePackFolder();
+    await loadVoicePackFiles();
+    if (result?.directory) {
+      showToast(`Voice pack: ${result.directory}`);
+    }
+  });
+
+  els.testSound.addEventListener("click", async () => {
+    if (!state.soundEnabled) {
+      state.soundEnabled = true;
+      saveStateNow();
+      syncControls();
+    }
+    if (state.alertSound === "pack") {
+      await loadVoicePackFiles({ silent: true });
+    }
+    playReadySound("Black Hole");
+  });
+
   els.soundToggle.addEventListener("click", () => {
     state.soundEnabled = !state.soundEnabled;
     saveStateNow();
     syncControls();
-    if (state.soundEnabled) playReadySound("Sound");
+    if (state.soundEnabled) playReadySound("Black Hole");
   });
 
   els.resetTimers.addEventListener("click", resetTimers);
@@ -1183,4 +1551,8 @@ function bindEvents() {
 bindEvents();
 render();
 setupDesktopIntegration();
+warmUpVoices();
+if (window.speechSynthesis) {
+  window.speechSynthesis.addEventListener("voiceschanged", warmUpVoices);
+}
 window.setInterval(updateTimers, 250);
